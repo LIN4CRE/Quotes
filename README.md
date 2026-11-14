@@ -2,13 +2,12 @@
 
 **A quote library with its sources attached.** Discover a daily quote, browse fifteen themes and 167 authors, save favourites, write private notes, build collections, and make branded share images — all without an account, a backend or a tracking pixel.
 
-[![CI](https://github.com/LIN4CRE/Quotes/actions/workflows/ci.yml/badge.svg)](https://github.com/LIN4CRE/Quotes/actions/workflows/ci.yml)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev)
 [![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-231f20.svg)](#licence)
 
-> The production URL is available from the Vercel project connected to this repository (`main` deploys to production; every pull request gets a preview deployment).
+**Live:** [lin4cre-quotes.vercel.app](https://lin4cre-quotes.vercel.app) — `main` deploys to production on Vercel; every pull request gets a preview deployment.
 
 ---
 
