@@ -155,7 +155,9 @@ if (existsSync(vercelPath)) {
   check('vercel framework is vite', vercel.framework === 'vite');
   check(
     'vercel has SPA rewrite',
-    vercel.rewrites?.some((rewrite) => rewrite.destination === '/index.html'),
+    vercel.rewrites?.some(
+      (rewrite) => rewrite.destination === '/' || rewrite.destination === '/index.html',
+    ),
   );
   const headers = (vercel.headers ?? []).flatMap((entry) => entry.headers ?? []);
   check(

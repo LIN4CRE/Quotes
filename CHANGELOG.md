@@ -2,6 +2,12 @@
 
 All notable changes to LIN4CRE QUOTES are recorded here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [semantic versioning](https://semver.org/).
 
+## [1.1.1] — 2026-11-14
+
+### Fixed
+
+- Private application routes (`/reflections`, `/favourites`, `/settings`, `/collections/…`) returned a Vercel `404 NOT_FOUND` in production instead of the application shell. The negative SPA rewrite now targets `/` rather than `/index.html`: with `cleanUrls` enabled Vercel resolves `/index.html` to a non-existent clean URL and rejects the rewrite. Files with an extension and anything under `/assets/` or `/icons/` are still excluded, so missing resources keep returning a genuine 404.
+
 ## [1.1.0] — 2026-11-14
 
 ### Added

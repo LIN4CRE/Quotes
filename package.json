@@ -1,7 +1,7 @@
 {
   "name": "lin4cre-quotes",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "LIN4CRE QUOTES \u2014 a curated quote discovery, collection and sharing app.",
   "type": "module",
   "license": "MIT",

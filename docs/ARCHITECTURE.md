@@ -72,7 +72,7 @@ This is not a server-rendered app. It has two coordinated layers:
 - **Build-time reading view.** `scripts/generate-static.mjs` loads the same data modules through Vite, renders semantic HTML into `#root`, sets route-specific `<title>`, description, canonical, Open Graph, Twitter and robots tags, and writes a real `.html` file per public route. Crawlers and no-JavaScript readers get the quotation, author, source and attribution status.
 - **Client metadata.** `src/components/Seo.tsx` applies the same route metadata after navigation and switches private routes to `noindex` with no canonical. React replaces the reading view on boot; the public data remains visible.
 
-`vercel.json` enables `cleanUrls`, so `/quote/aurelius-be-one` serves `quote/aurelius-be-one.html`. The SPA rewrite is negative: paths containing an extension or under `/assets/` or `/icons/` are never rewritten to `index.html`. Missing files therefore return a genuine 404 rather than an HTML 200.
+`vercel.json` enables `cleanUrls`, so `/quote/aurelius-be-one` serves `quote/aurelius-be-one.html`. The SPA rewrite is negative: paths containing an extension or under `/assets/` or `/icons/` are never rewritten to the application shell (`/`). Missing files therefore return a genuine 404 rather than an HTML 200.
 
 Private views (`/favourites`, `/collections`, `/history`, `/reflections`, `/settings`, `/random`, `/search`) are deliberately absent from the sitemap and disallowed in `robots.txt`. They are local state, not content.
 
