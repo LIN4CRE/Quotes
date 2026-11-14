@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Live application
+    url: https://lin4cre-quotes.vercel.app
+    about: Try the current production build before reporting a bug.
+  - name: Security policy
+    url: https://github.com/LIN4CRE/Quotes/blob/main/SECURITY.md
+    about: Please report vulnerabilities privately rather than in a public issue.
