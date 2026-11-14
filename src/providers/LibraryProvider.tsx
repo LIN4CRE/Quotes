@@ -17,14 +17,25 @@ import {
   MAX_COLLECTIONS,
   MAX_COLLECTION_DESCRIPTION,
   MAX_NOTE_LENGTH,
+  MAX_REFLECTION_AUTHOR,
+  MAX_REFLECTIONS,
+  MAX_REFLECTION_TEXT,
+  MAX_REFLECTION_TITLE,
   mergeLibraries,
   normaliseLibrary,
   validateCollectionName,
 } from '@/lib/library';
 import { isStorageAvailable, readJson, removeItem, STORAGE_KEYS, writeJson } from '@/lib/storage';
-import type { AdviceEntry, Collection, LibraryData } from '@/types';
+import type { AdviceEntry, Collection, LibraryData, Reflection } from '@/types';
 
 type CollectionMutationResult = 'added' | 'duplicate' | 'missing';
+
+export interface ReflectionInput {
+  title?: string;
+  text: string;
+  author?: string;
+  favourite?: boolean;
+}
 
 interface LibraryContextValue {
   library: LibraryData;
@@ -36,6 +47,7 @@ interface LibraryContextValue {
     name: string,
     description?: string,
     initialQuoteIds?: string[],
+    initialReflectionIds?: string[],
   ) => Collection | null;
   updateCollection: (id: string, patch: { name?: string; description?: string }) => void;
   deleteCollection: (id: string) => void;
@@ -47,6 +59,15 @@ interface LibraryContextValue {
   addAdvice: (text: string) => 'added' | 'duplicate';
   removeAdvice: (id: string) => void;
   clearAdvice: () => void;
+  createReflection: (input: ReflectionInput) => Reflection | null;
+  updateReflection: (id: string, patch: Partial<ReflectionInput>) => void;
+  deleteReflection: (id: string) => void;
+  toggleReflectionFavourite: (id: string) => boolean;
+  addReflectionToCollection: (
+    collectionId: string,
+    reflectionId: string,
+  ) => CollectionMutationResult;
+  removeReflectionFromCollection: (collectionId: string, reflectionId: string) => void;
   mergeImportedLibrary: (incoming: LibraryData) => void;
   clearLibrary: () => void;
   storageAvailable: boolean;
@@ -82,12 +103,19 @@ function readLegacyAdvice(): LegacyEntry[] {
   return entries;
 }
 
-/** Loads the library, migrating entries saved by the original g.html page. */
-export function loadInitialLibrary(): { library: LibraryData; migrated: number } {
-  const stored = normaliseLibrary(readJson(STORAGE_KEYS.library)).library;
+/** Loads the library, migrating v2 libraries and entries saved by the original g.html page. */
+export function loadInitialLibrary(): {
+  library: LibraryData;
+  migrated: number;
+  migratedFromV2: boolean;
+} {
+  const current = readJson(STORAGE_KEYS.library);
+  const fallbackV2 = current === null ? readJson(STORAGE_KEYS.legacyLibraryV2) : null;
+  const stored = normaliseLibrary(current ?? fallbackV2).library;
+  const migratedFromV2 = current === null && fallbackV2 !== null;
   const legacy = readLegacyAdvice();
 
-  if (legacy.length === 0) return { library: stored, migrated: 0 };
+  if (legacy.length === 0) return { library: stored, migrated: 0, migratedFromV2 };
 
   const seen = new Set(stored.advice.map((entry) => normaliseAdviceText(entry.text)));
   const migratedAdvice: AdviceEntry[] = [];
@@ -112,6 +140,7 @@ export function loadInitialLibrary(): { library: LibraryData; migrated: number }
         .slice(-ADVICE_LIMIT),
     },
     migrated: migratedAdvice.length,
+    migratedFromV2,
   };
 }
 
@@ -121,6 +150,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
   const [storageAvailable] = useState(isStorageAvailable);
   const [persistFailed, setPersistFailed] = useState(false);
   const legacyRemoved = useRef(initial.migrated === 0);
+  const v2Removed = useRef(!initial.migratedFromV2);
 
   // Persist every change. The library is small (a few hundred ids at most).
   useEffect(() => {
@@ -137,6 +167,11 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     if (!legacyRemoved.current) {
       removeItem(STORAGE_KEYS.legacyAdvice);
       legacyRemoved.current = true;
+    }
+
+    if (!v2Removed.current) {
+      removeItem(STORAGE_KEYS.legacyLibraryV2);
+      v2Removed.current = true;
     }
   }, [library, storageAvailable]);
 
@@ -201,7 +236,12 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const createCollection = useCallback(
-    (name: string, description = '', initialQuoteIds: string[] = []) => {
+    (
+      name: string,
+      description = '',
+      initialQuoteIds: string[] = [],
+      initialReflectionIds: string[] = [],
+    ) => {
       if (library.collections.length >= MAX_COLLECTIONS) return null;
       if (validateCollectionName(name, library.collections)) return null;
 
@@ -213,6 +253,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         createdAt: now,
         updatedAt: now,
         quoteIds: [...new Set(initialQuoteIds)],
+        reflectionIds: [...new Set(initialReflectionIds)],
       };
 
       setLibrary((current) => ({ ...current, collections: [collection, ...current.collections] }));
@@ -346,6 +387,141 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     setLibrary((current) => ({ ...current, advice: [] }));
   }, []);
 
+  const createReflection = useCallback(
+    (input: ReflectionInput): Reflection | null => {
+      const text = input.text.trim().slice(0, MAX_REFLECTION_TEXT);
+      if (!text) return null;
+      if (library.reflections.length >= MAX_REFLECTIONS) return null;
+
+      const now = new Date().toISOString();
+      const title = input.title?.trim().slice(0, MAX_REFLECTION_TITLE);
+      const author = input.author?.trim().slice(0, MAX_REFLECTION_AUTHOR);
+      const reflection: Reflection = {
+        id: createId('reflection'),
+        text,
+        favourite: input.favourite === true,
+        createdAt: now,
+        updatedAt: now,
+        ...(title ? { title } : {}),
+        ...(author ? { author } : {}),
+      };
+
+      setLibrary((current) => ({
+        ...current,
+        reflections: [reflection, ...current.reflections],
+      }));
+
+      return reflection;
+    },
+    [library.reflections.length],
+  );
+
+  const updateReflection = useCallback((id: string, patch: Partial<ReflectionInput>) => {
+    const text = patch.text?.trim().slice(0, MAX_REFLECTION_TEXT);
+    if (patch.text !== undefined && !text) return;
+
+    setLibrary((current) => ({
+      ...current,
+      reflections: current.reflections.map((reflection) => {
+        if (reflection.id !== id) return reflection;
+        const next: Reflection = { ...reflection, updatedAt: new Date().toISOString() };
+
+        if (text !== undefined) next.text = text;
+        if (patch.title !== undefined) {
+          const title = patch.title.trim().slice(0, MAX_REFLECTION_TITLE);
+          if (title) next.title = title;
+          else delete next.title;
+        }
+        if (patch.author !== undefined) {
+          const author = patch.author.trim().slice(0, MAX_REFLECTION_AUTHOR);
+          if (author) next.author = author;
+          else delete next.author;
+        }
+        if (patch.favourite !== undefined) next.favourite = patch.favourite;
+
+        return next;
+      }),
+    }));
+  }, []);
+
+  const deleteReflection = useCallback((id: string) => {
+    setLibrary((current) => ({
+      ...current,
+      reflections: current.reflections.filter((reflection) => reflection.id !== id),
+      collections: current.collections.map((collection) =>
+        collection.reflectionIds.includes(id)
+          ? {
+              ...collection,
+              reflectionIds: collection.reflectionIds.filter((reflectionId) => reflectionId !== id),
+              updatedAt: new Date().toISOString(),
+            }
+          : collection,
+      ),
+    }));
+  }, []);
+
+  const toggleReflectionFavourite = useCallback(
+    (id: string) => {
+      const current = library.reflections.find((reflection) => reflection.id === id);
+      if (!current) return false;
+      const favourite = !current.favourite;
+
+      setLibrary((libraryState) => ({
+        ...libraryState,
+        reflections: libraryState.reflections.map((reflection) =>
+          reflection.id === id
+            ? { ...reflection, favourite, updatedAt: new Date().toISOString() }
+            : reflection,
+        ),
+      }));
+
+      return favourite;
+    },
+    [library.reflections],
+  );
+
+  const addReflectionToCollection = useCallback(
+    (collectionId: string, reflectionId: string): CollectionMutationResult => {
+      const target = library.collections.find((collection) => collection.id === collectionId);
+      if (!target) return 'missing';
+      if (target.reflectionIds.includes(reflectionId)) return 'duplicate';
+
+      setLibrary((current) => ({
+        ...current,
+        collections: current.collections.map((collection) =>
+          collection.id === collectionId
+            ? {
+                ...collection,
+                reflectionIds: [...collection.reflectionIds, reflectionId],
+                updatedAt: new Date().toISOString(),
+              }
+            : collection,
+        ),
+      }));
+
+      return 'added';
+    },
+    [library.collections],
+  );
+
+  const removeReflectionFromCollection = useCallback(
+    (collectionId: string, reflectionId: string) => {
+      setLibrary((current) => ({
+        ...current,
+        collections: current.collections.map((collection) =>
+          collection.id === collectionId
+            ? {
+                ...collection,
+                reflectionIds: collection.reflectionIds.filter((id) => id !== reflectionId),
+                updatedAt: new Date().toISOString(),
+              }
+            : collection,
+        ),
+      }));
+    },
+    [],
+  );
+
   const mergeImportedLibrary = useCallback((incoming: LibraryData) => {
     setLibrary((current) => mergeLibraries(current, incoming));
   }, []);
@@ -375,6 +551,12 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       addAdvice,
       removeAdvice,
       clearAdvice,
+      createReflection,
+      updateReflection,
+      deleteReflection,
+      toggleReflectionFavourite,
+      addReflectionToCollection,
+      removeReflectionFromCollection,
       mergeImportedLibrary,
       clearLibrary,
       storageAvailable,
@@ -397,6 +579,12 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       addAdvice,
       removeAdvice,
       clearAdvice,
+      createReflection,
+      updateReflection,
+      deleteReflection,
+      toggleReflectionFavourite,
+      addReflectionToCollection,
+      removeReflectionFromCollection,
       mergeImportedLibrary,
       clearLibrary,
       storageAvailable,

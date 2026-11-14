@@ -21,7 +21,8 @@ import { FolderOpen } from 'lucide-react';
 export default function CollectionDetail() {
   const { collectionId = '' } = useParams();
   const navigate = useNavigate();
-  const { library, removeFromCollection, deleteCollection } = useLibrary();
+  const { library, removeFromCollection, removeReflectionFromCollection, deleteCollection } =
+    useLibrary();
   const { settings } = useSettings();
   const { addToast } = useToast();
   const [editOpen, setEditOpen] = useState(false);
@@ -47,6 +48,10 @@ export default function CollectionDetail() {
   const quotes = collection.quoteIds
     .map((id) => getQuote(id))
     .filter((quote): quote is NonNullable<typeof quote> => Boolean(quote));
+  const reflections = collection.reflectionIds
+    .map((id) => library.reflections.find((reflection) => reflection.id === id))
+    .filter((reflection): reflection is NonNullable<typeof reflection> => Boolean(reflection));
+  const totalItems = quotes.length + reflections.length;
 
   const handleDelete = () => {
     deleteCollection(collection.id);
@@ -58,11 +63,12 @@ export default function CollectionDetail() {
   const handleExport = () => {
     const payload = exportLibraryAsJson(
       {
-        version: 2,
+        version: 3,
         favourites: [],
         collections: [collection],
         history: [],
         advice: [],
+        reflections,
       },
       settings,
     );
@@ -102,8 +108,11 @@ export default function CollectionDetail() {
               {collection.description || 'No description yet. Edit the collection to add one.'}
             </p>
             <p className="mt-3 text-[11px] text-subtle">
-              {quotes.length} quote{quotes.length === 1 ? '' : 's'} · updated{' '}
-              {relativeTime(collection.updatedAt)}
+              {quotes.length} quote{quotes.length === 1 ? '' : 's'}
+              {reflections.length > 0
+                ? ` · ${reflections.length} reflection${reflections.length === 1 ? '' : 's'}`
+                : ''}{' '}
+              · updated {relativeTime(collection.updatedAt)}
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap gap-1.5">
@@ -137,7 +146,11 @@ export default function CollectionDetail() {
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
         <p className="text-[12px] text-subtle">
-          Add quotes from the library, a quote page, or the “Collect” action on any card.
+          Add quotes from the library, or open{' '}
+          <Link to="/reflections" className="text-accent transition hover:underline">
+            your reflections
+          </Link>{' '}
+          and use “Add reflection to a collection”.
         </p>
         <LinkButton to="/search" variant="secondary" size="sm">
           <Plus className="size-3.5" aria-hidden />
@@ -146,11 +159,11 @@ export default function CollectionDetail() {
       </div>
 
       <section className="mt-5" aria-label={`Quotes in ${collection.name}`}>
-        {quotes.length === 0 ? (
+        {totalItems === 0 ? (
           <EmptyState
             icon={FolderOpen}
             title="This collection is empty"
-            description="Search the library and use “Add to collection” on any quote. Your collection will be waiting."
+            description="Search the library and use “Add to collection” on any quote, or collect one of your own reflections. Your collection will be waiting."
             action={
               <LinkButton to="/search">
                 Search quotes
@@ -159,25 +172,84 @@ export default function CollectionDetail() {
             }
           />
         ) : (
-          <QuoteList
-            quotes={quotes}
-            pageSize={12}
-            resetKey={collection.id}
-            extraActions={(quote) => (
-              <IconButton
-                label="Remove from this collection"
-                size="sm"
-                onClick={() => {
-                  removeFromCollection(collection.id, quote.id);
-                  addToast({ title: 'Removed from collection', variant: 'info' });
-                }}
-              >
-                <Trash2 className="size-4" aria-hidden />
-              </IconButton>
-            )}
-          />
+          <>
+            {quotes.length > 0 ? (
+              <QuoteList
+                quotes={quotes}
+                pageSize={12}
+                resetKey={collection.id}
+                extraActions={(quote) => (
+                  <IconButton
+                    label="Remove from this collection"
+                    size="sm"
+                    onClick={() => {
+                      removeFromCollection(collection.id, quote.id);
+                      addToast({ title: 'Removed from collection', variant: 'info' });
+                    }}
+                  >
+                    <Trash2 className="size-4" aria-hidden />
+                  </IconButton>
+                )}
+              />
+            ) : null}
+          </>
         )}
       </section>
+
+      {reflections.length > 0 ? (
+        <section className="mt-8" aria-labelledby="collection-reflections-heading">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <div>
+              <h2 id="collection-reflections-heading" className="text-xl font-semibold text-ink">
+                Your reflections
+              </h2>
+              <p className="mt-1 text-[12px] text-muted">
+                Personal writing you chose to group with this collection.
+              </p>
+            </div>
+            <Link to="/reflections" className="text-[12px] text-accent transition hover:underline">
+              All reflections
+            </Link>
+          </div>
+          <ul className="grid gap-3 md:grid-cols-2">
+            {reflections.map((reflection) => (
+              <li
+                key={reflection.id}
+                className="flex flex-col rounded-2xl border border-line bg-surface p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="inline-flex items-center rounded-full border border-accent/30 bg-accent-soft px-2 py-0.5 text-[9.5px] font-medium tracking-wide text-ink uppercase">
+                    Your words
+                  </span>
+                  <IconButton
+                    label="Remove reflection from this collection"
+                    size="sm"
+                    onClick={() => {
+                      removeReflectionFromCollection(collection.id, reflection.id);
+                      addToast({ title: 'Reflection removed from collection', variant: 'info' });
+                    }}
+                  >
+                    <Trash2 className="size-4" aria-hidden />
+                  </IconButton>
+                </div>
+                {reflection.title ? (
+                  <h3 className="mt-2 font-serif text-lg font-semibold text-ink">
+                    {reflection.title}
+                  </h3>
+                ) : null}
+                <p className="mt-2 font-serif text-[15px] leading-relaxed whitespace-pre-line text-ink">
+                  {reflection.text}
+                </p>
+                <p className="mt-3 border-t border-line pt-2 text-[10.5px] text-subtle">
+                  {reflection.author
+                    ? `Attributed by you to ${reflection.author}`
+                    : 'Personal reflection'}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {editOpen ? (
         <CollectionDialog open onClose={() => setEditOpen(false)} collection={collection} />
@@ -187,7 +259,7 @@ export default function CollectionDetail() {
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}
         title="Delete this collection?"
-        description="The quotes stay in the library and in your favourites. Only the collection itself is removed."
+        description="Quotes stay in the library and your reflections stay in My reflections. Only the collection itself is removed."
         footer={
           <>
             <Button variant="secondary" onClick={() => setDeleteOpen(false)}>
@@ -202,8 +274,13 @@ export default function CollectionDetail() {
       >
         <p className="text-sm text-muted">
           “{collection.name}” contains {collection.quoteIds.length} quote
-          {collection.quoteIds.length === 1 ? '' : 's'}. This cannot be undone, but you can export
-          the collection first.
+          {collection.quoteIds.length === 1 ? '' : 's'}
+          {collection.reflectionIds.length > 0
+            ? ` and ${collection.reflectionIds.length} reflection${
+                collection.reflectionIds.length === 1 ? '' : 's'
+              }`
+            : ''}
+          . This cannot be undone, but you can export the collection first.
         </p>
       </Modal>
     </div>

@@ -28,6 +28,8 @@ import {
   exportFavouritesAsMarkdown,
   exportLibraryAsJson,
   parseBackup,
+  summariseBackup,
+  type ParsedBackup,
 } from '@/lib/library';
 import { useLibrary } from '@/providers/LibraryProvider';
 import { useSettings } from '@/providers/SettingsProvider';
@@ -63,15 +65,18 @@ export default function Settings() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState('');
+  const [pendingImport, setPendingImport] = useState<ParsedBackup | null>(null);
   const [importError, setImportError] = useState('');
   const [clearOpen, setClearOpen] = useState(false);
 
   const notes = library.favourites.filter((favourite) => Boolean(favourite.note)).length;
+  const preview = pendingImport ? summariseBackup(pendingImport) : null;
   const hasData =
     library.favourites.length +
       library.collections.length +
       library.history.length +
-      library.advice.length >
+      library.advice.length +
+      library.reflections.length >
     0;
 
   const exportJson = () => {
@@ -81,7 +86,7 @@ export default function Settings() {
     );
     addToast({
       title: 'Backup downloaded',
-      description: 'JSON with favourites, collections and advice.',
+      description: 'JSON with favourites, notes, collections, reflections, history and advice.',
       variant: 'success',
     });
   };
@@ -95,37 +100,49 @@ export default function Settings() {
     addToast({ title: 'Favourites downloaded as Markdown', variant: 'success' });
   };
 
-  const applyBackup = (text: string) => {
+  const reviewBackup = (text: string) => {
     try {
       const parsed = parseBackup(text);
-      mergeImportedLibrary(parsed.library);
-      setImportOpen(false);
-      setImportText('');
+      setPendingImport(parsed);
+      setImportOpen(true);
       setImportError('');
-      addToast({
-        title: 'Backup imported',
-        description: `${parsed.library.favourites.length} favourites and ${parsed.library.collections.length} collections merged.`,
-        variant: 'success',
-      });
-      for (const warning of parsed.warnings) {
-        addToast({ title: 'Import note', description: warning, variant: 'info' });
-      }
     } catch (reason) {
+      setPendingImport(null);
+      setImportOpen(true);
       setImportError(
         reason instanceof BackupError ? reason.message : 'That backup could not be imported.',
       );
     }
   };
 
+  const applyBackup = () => {
+    if (!pendingImport) return;
+    const incoming = pendingImport;
+    mergeImportedLibrary(incoming.library);
+    setImportOpen(false);
+    setPendingImport(null);
+    setImportText('');
+    setImportError('');
+    addToast({
+      title: 'Backup imported',
+      description: `${incoming.library.favourites.length} favourites, ${incoming.library.collections.length} collections and ${incoming.library.reflections.length} reflections merged.`,
+      variant: 'success',
+    });
+    for (const warning of incoming.warnings) {
+      addToast({ title: 'Import note', description: warning, variant: 'info' });
+    }
+  };
+
   const onFileChosen = async (file: File | undefined) => {
     if (!file) return;
     if (file.size > 5_000_000) {
+      setPendingImport(null);
       setImportError('That file is too large to be a LIN4CRE QUOTES backup.');
       setImportOpen(true);
       return;
     }
     const text = await file.text();
-    applyBackup(text);
+    reviewBackup(text);
   };
 
   const handleInstall = async () => {
@@ -259,10 +276,11 @@ export default function Settings() {
               does not sync between devices. Export a backup to move it somewhere else.
             </p>
 
-            <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
               {[
                 { label: 'Favourites', value: library.favourites.length },
                 { label: 'Collections', value: library.collections.length },
+                { label: 'Reflections', value: library.reflections.length },
                 { label: 'Notes', value: notes },
                 { label: 'Advice', value: library.advice.length },
               ].map((stat) => (
@@ -305,7 +323,14 @@ export default function Settings() {
                 <Upload className="size-4" aria-hidden />
                 Import backup
               </Button>
-              <Button variant="ghost" onClick={() => setImportOpen(true)}>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setPendingImport(null);
+                  setImportError('');
+                  setImportOpen(true);
+                }}
+              >
                 Paste JSON
               </Button>
               <input
@@ -334,8 +359,8 @@ export default function Settings() {
                   Clear all saved data
                 </Button>
                 <p className="mt-2 text-[10.5px] text-subtle">
-                  Removes favourites, collections, notes, history and saved advice from this
-                  browser.
+                  Removes favourites, collections, reflections, notes, history and saved advice from
+                  this browser.
                 </p>
               </div>
             ) : null}
@@ -431,52 +456,103 @@ export default function Settings() {
           setImportError('');
         }}
         title="Import a backup"
-        description="Paste a LIN4CRE QUOTES JSON backup below. Imports merge with your current library."
+        description="Paste or choose a LIN4CRE QUOTES JSON backup. You will see a summary before anything is merged."
         footer={
           <>
             <Button
               variant="secondary"
               onClick={() => {
                 setImportOpen(false);
+                setPendingImport(null);
+                setImportText('');
                 setImportError('');
               }}
             >
               Cancel
             </Button>
-            <Button onClick={() => applyBackup(importText)} disabled={!importText.trim()}>
-              Import
-            </Button>
+            {pendingImport ? (
+              <Button onClick={applyBackup}>
+                Import{' '}
+                {preview ? preview.favourites + preview.collections + preview.reflections : 0} saved
+                items
+              </Button>
+            ) : (
+              <Button onClick={() => reviewBackup(importText)} disabled={!importText.trim()}>
+                Review import
+              </Button>
+            )}
           </>
         }
       >
-        <label htmlFor="backup-json" className="label-caps">
-          Backup JSON
-        </label>
-        <textarea
-          id="backup-json"
-          value={importText}
-          onChange={(event) => {
-            setImportText(event.target.value);
-            setImportError('');
-          }}
-          rows={8}
-          placeholder='{"app":"lin4cre-quotes","schemaVersion":2,…}'
-          className="field mt-2 resize-y font-mono text-[11px] leading-relaxed"
-          aria-invalid={Boolean(importError)}
-          aria-describedby={importError ? 'backup-error' : undefined}
-        />
-        {importError ? (
-          <p id="backup-error" role="alert" className="mt-2 text-xs text-danger">
-            {importError}
-          </p>
-        ) : null}
+        {preview ? (
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold text-ink">Ready to merge</h3>
+              <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
+                Nothing has changed yet. Existing notes win, matching collection names are combined,
+                and reflections with the same id are kept once.
+              </p>
+            </div>
+            <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {[
+                { label: 'Favourites', value: preview.favourites },
+                { label: 'Notes', value: preview.notes },
+                { label: 'Collections', value: preview.collections },
+                { label: 'Reflections', value: preview.reflections },
+                { label: 'History', value: preview.history },
+                { label: 'Advice', value: preview.advice },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-xl border border-line bg-surface-2 px-3 py-2.5"
+                >
+                  <dt className="text-[10px] tracking-wide text-subtle uppercase">{item.label}</dt>
+                  <dd className="mt-0.5 text-lg font-semibold text-ink tabular-nums">
+                    {item.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            {preview.warnings.length > 0 ? (
+              <ul className="space-y-1.5 rounded-xl border border-warning/30 bg-warning/5 p-3 text-[11px] leading-relaxed text-warning">
+                {preview.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : (
+          <>
+            <label htmlFor="backup-json" className="label-caps">
+              Backup JSON
+            </label>
+            <textarea
+              id="backup-json"
+              value={importText}
+              onChange={(event) => {
+                setImportText(event.target.value);
+                setImportError('');
+              }}
+              rows={8}
+              placeholder='{"app":"lin4cre-quotes","schemaVersion":3,…}'
+              className="field mt-2 resize-y font-mono text-[11px] leading-relaxed"
+              aria-invalid={Boolean(importError)}
+              aria-describedby={importError ? 'backup-error' : undefined}
+            />
+            {importError ? (
+              <p id="backup-error" role="alert" className="mt-2 text-xs text-danger">
+                {importError}
+              </p>
+            ) : null}
+          </>
+        )}
       </Modal>
 
       <Modal
         open={clearOpen}
         onClose={() => setClearOpen(false)}
         title="Clear all saved data?"
-        description="This removes every saved quote, collection, note, history entry and advice entry from this browser. Settings are kept."
+        description="This removes every saved quote, collection, note, reflection, history entry and advice entry from this browser. Settings are kept."
         footer={
           <>
             <Button variant="secondary" onClick={() => setClearOpen(false)}>

@@ -14,6 +14,7 @@ const QuoteDetail = lazy(() => import('@/pages/QuoteDetail'));
 const RandomQuote = lazy(() => import('@/pages/RandomQuote'));
 const Favourites = lazy(() => import('@/pages/Favourites'));
 const Collections = lazy(() => import('@/pages/Collections'));
+const Reflections = lazy(() => import('@/pages/Reflections'));
 const CollectionDetail = lazy(() => import('@/pages/CollectionDetail'));
 const FeaturedCollection = lazy(() => import('@/pages/FeaturedCollection'));
 const HistoryPage = lazy(() => import('@/pages/History'));
@@ -55,6 +56,7 @@ export default function App() {
             <Route path="random" element={<RandomQuote />} />
             <Route path="favourites" element={<Favourites />} />
             <Route path="collections" element={<Collections />} />
+            <Route path="reflections" element={<Reflections />} />
             <Route path="collections/:collectionId" element={<CollectionDetail />} />
             <Route path="featured/:collectionId" element={<FeaturedCollection />} />
             <Route path="history" element={<HistoryPage />} />

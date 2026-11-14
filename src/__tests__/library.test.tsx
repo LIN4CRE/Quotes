@@ -175,6 +175,7 @@ describe('library state and persistence', () => {
       createdAt: '2024-01-01T00:00:00.000Z',
       updatedAt: '2024-01-01T00:00:00.000Z',
       quoteIds: [second.id],
+      reflectionIds: [],
     });
 
     act(() => result.current.mergeImportedLibrary(incoming));

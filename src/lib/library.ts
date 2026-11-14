@@ -4,17 +4,22 @@ import type {
   Collection,
   HistoryEntry,
   LibraryData,
+  Reflection,
   SavedQuote,
   Settings,
 } from '@/types';
 
-export const LIBRARY_VERSION = 2 as const;
+export const LIBRARY_VERSION = 3 as const;
 export const HISTORY_LIMIT = 100;
 export const ADVICE_LIMIT = 400;
 export const MAX_COLLECTIONS = 100;
 export const MAX_COLLECTION_NAME = 80;
 export const MAX_COLLECTION_DESCRIPTION = 240;
 export const MAX_NOTE_LENGTH = 2000;
+export const MAX_REFLECTIONS = 500;
+export const MAX_REFLECTION_TITLE = 120;
+export const MAX_REFLECTION_TEXT = 5000;
+export const MAX_REFLECTION_AUTHOR = 120;
 
 export function createEmptyLibrary(): LibraryData {
   return {
@@ -23,6 +28,7 @@ export function createEmptyLibrary(): LibraryData {
     collections: [],
     history: [],
     advice: [],
+    reflections: [],
   };
 }
 
@@ -68,7 +74,10 @@ function normaliseFavourite(value: unknown): SavedQuote | null {
   };
 }
 
-function normaliseCollection(value: unknown): Collection | null {
+function normaliseCollection(
+  value: unknown,
+  reflectionIds: ReadonlySet<string>,
+): Collection | null {
   if (!isRecord(value)) return null;
 
   const name = cleanText(value.name, MAX_COLLECTION_NAME);
@@ -94,7 +103,51 @@ function normaliseCollection(value: unknown): Collection | null {
       ]
     : [];
 
-  return { id, name, description, createdAt, updatedAt, quoteIds };
+  const normalisedReflectionIds = Array.isArray(value.reflectionIds)
+    ? [
+        ...new Set(
+          value.reflectionIds.filter(
+            (id): id is string => typeof id === 'string' && reflectionIds.has(id),
+          ),
+        ),
+      ]
+    : [];
+
+  return {
+    id,
+    name,
+    description,
+    createdAt,
+    updatedAt,
+    quoteIds,
+    reflectionIds: normalisedReflectionIds,
+  };
+}
+
+function normaliseReflection(value: unknown): Reflection | null {
+  if (!isRecord(value)) return null;
+  const text = cleanText(value.text, MAX_REFLECTION_TEXT);
+  if (!text) return null;
+
+  const id =
+    typeof value.id === 'string' && value.id.length > 0 ? value.id : createId('reflection');
+  const now = new Date().toISOString();
+  const createdAt = isIsoDate(value.createdAt) ? new Date(value.createdAt).toISOString() : now;
+  const updatedAt = isIsoDate(value.updatedAt)
+    ? new Date(value.updatedAt).toISOString()
+    : createdAt;
+  const title = cleanText(value.title, MAX_REFLECTION_TITLE);
+  const author = cleanText(value.author, MAX_REFLECTION_AUTHOR);
+
+  return {
+    id,
+    text,
+    favourite: value.favourite === true,
+    createdAt,
+    updatedAt,
+    ...(title ? { title } : {}),
+    ...(author ? { author } : {}),
+  };
 }
 
 function normaliseHistoryEntry(value: unknown): HistoryEntry | null {
@@ -136,9 +189,17 @@ export function normaliseLibrary(raw: unknown): NormaliseResult {
   const favourites = Array.isArray(raw.favourites)
     ? raw.favourites.map(normaliseFavourite).filter((item): item is SavedQuote => item !== null)
     : [];
+  const reflections = Array.isArray(raw.reflections)
+    ? raw.reflections
+        .map(normaliseReflection)
+        .filter((item): item is Reflection => item !== null)
+        .slice(0, MAX_REFLECTIONS)
+    : [];
+  const dedupedReflections = dedupeBy(reflections, (item) => item.id);
+  const reflectionIds = new Set(dedupedReflections.map((item) => item.id));
   const collections = Array.isArray(raw.collections)
     ? raw.collections
-        .map(normaliseCollection)
+        .map((collection) => normaliseCollection(collection, reflectionIds))
         .filter((item): item is Collection => item !== null)
         .slice(0, MAX_COLLECTIONS)
     : [];
@@ -174,6 +235,7 @@ export function normaliseLibrary(raw: unknown): NormaliseResult {
     collections: dedupedCollections,
     history: dedupedHistory,
     advice: dedupedAdvice,
+    reflections: dedupedReflections,
   };
 
   const repaired =
@@ -181,9 +243,11 @@ export function normaliseLibrary(raw: unknown): NormaliseResult {
     !Array.isArray(raw.collections) ||
     !Array.isArray(raw.history) ||
     !Array.isArray(raw.advice) ||
+    !Array.isArray(raw.reflections) ||
     raw.version !== LIBRARY_VERSION ||
     dedupedFavourites.length !== favourites.length ||
     dedupedCollections.length !== collections.length ||
+    dedupedReflections.length !== reflections.length ||
     dedupedAdvice.length !== advice.length;
 
   return { library, repaired };
@@ -215,6 +279,7 @@ export function mergeLibraries(current: LibraryData, incoming: LibraryData): Lib
   const collections = current.collections.map((collection) => ({
     ...collection,
     quoteIds: [...collection.quoteIds],
+    reflectionIds: [...collection.reflectionIds],
   }));
 
   for (const incomingCollection of incoming.collections) {
@@ -226,6 +291,9 @@ export function mergeLibraries(current: LibraryData, incoming: LibraryData): Lib
 
     if (target) {
       target.quoteIds = [...new Set([...target.quoteIds, ...incomingCollection.quoteIds])];
+      target.reflectionIds = [
+        ...new Set([...target.reflectionIds, ...incomingCollection.reflectionIds]),
+      ];
       if (!target.description && incomingCollection.description) {
         target.description = incomingCollection.description;
       }
@@ -233,7 +301,20 @@ export function mergeLibraries(current: LibraryData, incoming: LibraryData): Lib
         target.updatedAt = incomingCollection.updatedAt;
       }
     } else if (collections.length < MAX_COLLECTIONS) {
-      collections.push({ ...incomingCollection, quoteIds: [...incomingCollection.quoteIds] });
+      collections.push({
+        ...incomingCollection,
+        quoteIds: [...incomingCollection.quoteIds],
+        reflectionIds: [...incomingCollection.reflectionIds],
+      });
+    }
+  }
+
+  const reflections = current.reflections.map((reflection) => ({ ...reflection }));
+  const reflectionIds = new Set(reflections.map((reflection) => reflection.id));
+  for (const reflection of incoming.reflections) {
+    if (!reflectionIds.has(reflection.id) && reflections.length < MAX_REFLECTIONS) {
+      reflections.push({ ...reflection });
+      reflectionIds.add(reflection.id);
     }
   }
 
@@ -250,9 +331,9 @@ export function mergeLibraries(current: LibraryData, incoming: LibraryData): Lib
     .slice(0, HISTORY_LIMIT);
 
   const advice = [...current.advice];
-  const seenAdvice = new Set(advice.map((item) => item.text.toLowerCase()));
+  const seenAdvice = new Set(advice.map((item) => item.text.trim().toLowerCase()));
   for (const entry of incoming.advice) {
-    const key = entry.text.toLowerCase();
+    const key = entry.text.trim().toLowerCase();
     if (!seenAdvice.has(key)) {
       advice.push(entry);
       seenAdvice.add(key);
@@ -265,6 +346,7 @@ export function mergeLibraries(current: LibraryData, incoming: LibraryData): Lib
     collections,
     history,
     advice: advice.slice(-ADVICE_LIMIT),
+    reflections,
   };
 }
 
@@ -328,7 +410,8 @@ export function parseBackup(text: string): ParsedBackup {
     Array.isArray(candidate.favourites) ||
     Array.isArray(candidate.collections) ||
     Array.isArray(candidate.advice) ||
-    Array.isArray(candidate.history);
+    Array.isArray(candidate.history) ||
+    Array.isArray(candidate.reflections);
 
   if (!hasKnownFields) {
     throw new BackupError('This backup has no favourites, collections or advice to import.');
@@ -347,12 +430,39 @@ export function parseBackup(text: string): ParsedBackup {
     );
   }
 
-  const total = library.favourites.length + library.collections.length + library.advice.length;
+  const total =
+    library.favourites.length +
+    library.collections.length +
+    library.advice.length +
+    library.reflections.length;
   if (total === 0) {
     throw new BackupError('There was nothing to import in that backup.');
   }
 
   return { library, warnings };
+}
+
+export interface ImportPreview {
+  favourites: number;
+  notes: number;
+  collections: number;
+  history: number;
+  advice: number;
+  reflections: number;
+  warnings: string[];
+}
+
+/** Human-readable summary shown before an import is applied. */
+export function summariseBackup(parsed: ParsedBackup): ImportPreview {
+  return {
+    favourites: parsed.library.favourites.length,
+    notes: parsed.library.favourites.filter((favourite) => Boolean(favourite.note)).length,
+    collections: parsed.library.collections.length,
+    history: parsed.library.history.length,
+    advice: parsed.library.advice.length,
+    reflections: parsed.library.reflections.length,
+    warnings: parsed.warnings,
+  };
 }
 
 export function exportLibraryAsJson(library: LibraryData, settings?: Settings): string {
