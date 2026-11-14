@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="LIN4CRE QUOTES">
+  <defs>
+    <linearGradient id="gold" x1="10" y1="4" x2="54" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f8e2b6"/>
+      <stop offset="0.5" stop-color="#e7b66b"/>
+      <stop offset="1" stop-color="#a96a16"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.28" cy="0.12" r="0.95">
+      <stop stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="0.6" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="#0a0b0e"/>
+  <rect x="0.9" y="0.9" width="62.2" height="62.2" rx="14.1" fill="none" stroke="url(#gold)" stroke-opacity="0.5" stroke-width="1.8"/>
+  <g transform="translate(13.6 14.2) scale(1.53)" fill="url(#gold)">
+    <path d="M9.35 5.6C6.42 7.05 4.65 9.68 4.65 12.75c0 3.14 1.93 5.1 4.35 5.1 2.1 0 3.65-1.5 3.65-3.55 0-1.92-1.35-3.28-3.2-3.28-.26 0-.5.03-.72.09.42-1.55 1.62-2.78 3.3-3.63L9.35 5.6Z"/>
+    <path d="M19.25 5.6c-2.93 1.45-4.7 4.08-4.7 7.15 0 3.14 1.93 5.1 4.35 5.1 2.1 0 3.65-1.5 3.65-3.55 0-1.92-1.35-3.28-3.2-3.28-.26 0-.5.03-.72.09.42-1.55 1.62-2.78 3.3-3.63L19.25 5.6Z"/>
+  </g>
+  <rect width="64" height="64" rx="15" fill="url(#sheen)"/>
+</svg>
