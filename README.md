@@ -254,7 +254,7 @@ The app remains a client-side React application, but public content is not trapp
 - The pre-rendered HTML contains the quotation, author, source and attribution status in a readable editorial layout. React replaces it on boot.
 - `/sitemap.xml` is a real XML document listing only public pages. Private, browser-local views (`/favourites`, `/collections`, `/history`, `/reflections`, `/settings`, `/random`, `/search`) are excluded and marked `noindex`.
 - `/robots.txt` contains the correct absolute `Sitemap:` line.
-- `vercel.json` enables clean URLs and a **negative** SPA rewrite: paths with a file extension or under `/assets/`/`/icons/` are never rewritten to `index.html`, so a missing resource returns 404 rather than an HTML 200.
+- `vercel.json` enables clean URLs and a **negative** SPA rewrite: paths with a file extension or under `/assets/`/`/icons/` are never rewritten to the application shell, so a missing resource returns 404 rather than an HTML 200.
 - `scripts/check-build.mjs` verifies all of the above on every build, including the sitemap count, absence of private URLs, canonical/OG tags and the pre-rendered quote content.
 
 There is no SEO server or runtime process: the output is static files produced by `npm run build`.
@@ -330,7 +330,7 @@ Browser-only checks above were executed in this build environment with headless 
 - Framework `vite`, install `npm ci`, output `dist`.
 - Build command `npm run verify:production`: Vercel cannot deploy a build that fails lint, type-checking, tests, the production build or artefact checks.
 - `cleanUrls` so pre-rendered pages are served at `/about`, `/quote/:id` and so on.
-- Negative SPA rewrite to `/index.html` only for genuine application routes; static resources are excluded so missing files return 404.
+- Negative SPA rewrite to the application shell (`/`) only for genuine application routes; static resources are excluded so missing files return 404.
 - Explicit XML content type and caching for `/sitemap.xml`, plus caching for `/robots.txt`.
 - CSP allowing only self-hosted assets plus `https://api.adviceslip.com`; `img-src` includes `blob:` for generated images.
 - `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`.
