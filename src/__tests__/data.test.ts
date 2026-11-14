@@ -48,6 +48,27 @@ describe('quote library integrity', () => {
     expect(statuses).toEqual(new Set(['verified', 'attributed', 'disputed', 'anonymous']));
   });
 
+  it('only publishes checked, conservative source links', () => {
+    const linked = quotes.filter((quote) => quote.sourceUrl);
+    const allowedHosts = new Set([
+      'www.gutenberg.org',
+      'www.folger.edu',
+      'classics.mit.edu',
+      'en.wikisource.org',
+    ]);
+
+    expect(linked.length).toBeGreaterThanOrEqual(30);
+    for (const quote of linked) {
+      const url = new URL(quote.sourceUrl!);
+      expect(url.protocol, quote.id).toBe('https:');
+      expect(allowedHosts.has(url.hostname), `${quote.id} host ${url.hostname}`).toBe(true);
+      expect(quote.source, `${quote.id} has a URL but no source text`).toBeTruthy();
+      expect(url.href, `${quote.id} should not carry tracking parameters`).not.toMatch(
+        /[?&](utm_|fbclid|gclid)/,
+      );
+    }
+  });
+
   it('has genuine coverage in all fifteen themes and uses every author', () => {
     expect(categories).toHaveLength(15);
 

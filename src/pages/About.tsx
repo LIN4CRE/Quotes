@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/Badge';
 import { GitHubIcon } from '@/components/ui/GitHubIcon';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { SupportButton } from '@/components/ui/SupportButton';
 import { quotes } from '@/data/quotes';
 import { APP_VERSION, REPO_URL } from '@/lib/constants';
 import { attributionStyles } from '@/lib/tones';
@@ -50,6 +51,7 @@ export default function About() {
               <GitHubIcon className="size-4" />
               Repository
             </a>
+            <SupportButton />
             <Link
               to="/settings"
               className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm text-muted transition hover:text-ink"
@@ -291,6 +293,16 @@ export default function About() {
               Built with React, TypeScript, Vite, Tailwind CSS, Lucide icons and a Workbox service
               worker. Fonts are self-hosted so the app works offline.
             </p>
+          </div>
+
+          <div className="rounded-2xl border border-accent/25 bg-accent-soft/60 p-5">
+            <h2 className="label-caps">Support the project</h2>
+            <p className="mt-2 text-[11.5px] leading-relaxed text-muted">
+              LIN4CRE QUOTES is free, has no ads and no tracking. If it is useful to you, you can
+              buy me a coffee through PayPal — the link opens PayPal in a new tab and no payment
+              details are handled by this app.
+            </p>
+            <SupportButton variant="compact" className="mt-3" />
           </div>
 
           <div className="rounded-2xl border border-line bg-surface p-5">

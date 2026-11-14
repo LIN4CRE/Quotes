@@ -1,8 +1,10 @@
 import { getAuthor, type AuthorId } from '@/data/authors';
+import { getSourceUrl } from '@/data/sourceLinks';
 import type { AttributionStatus, CategoryId, Quote } from '@/types';
 
 interface QuoteDetails {
   source?: string;
+  sourceUrl?: string;
   year?: number;
   attributionNote?: string;
 }
@@ -25,6 +27,8 @@ function q(
     throw new Error(`Unknown author "${authorId}" for quote "${id}"`);
   }
 
+  const sourceUrl = details.sourceUrl ?? getSourceUrl(details.source);
+
   return {
     id,
     text,
@@ -33,6 +37,7 @@ function q(
     categories,
     attribution,
     ...(details.source === undefined ? {} : { source: details.source }),
+    ...(sourceUrl === undefined ? {} : { sourceUrl }),
     ...(details.year === undefined ? {} : { year: details.year }),
     ...(details.attributionNote === undefined ? {} : { attributionNote: details.attributionNote }),
   };

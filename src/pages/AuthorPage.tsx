@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 
 import { AuthorAvatar } from '@/components/quotes/AuthorAvatar';
+import { CorrectionLink } from '@/components/quotes/CorrectionLink';
 import { QuoteList } from '@/components/quotes/QuoteList';
 import { LinkButton } from '@/components/ui/Button';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -76,6 +77,12 @@ export default function AuthorPage() {
               {categories > 0 ? <span>{categories} themes</span> : null}
             </div>
             <p className="mt-4 max-w-2xl text-[13px] leading-relaxed text-muted">{author.bio}</p>
+            <p className="mt-3 max-w-2xl text-[11px] leading-relaxed text-subtle">
+              This biography is an editorial summary, not a quotation. Dates and works are
+              cross-checked against standard references; the source for each quotation is recorded
+              on its quote page.
+            </p>
+            <CorrectionLink label="Report a biography or attribution correction" className="mt-2" />
           </div>
         </div>
       </header>
