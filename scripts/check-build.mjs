@@ -234,12 +234,17 @@ if (existsSync(robotsPath)) {
   check('robots.txt disallows private views', (robots.match(/^Disallow:/gm) ?? []).length >= 7);
 }
 
+const previewBuild = process.env.VERCEL_ENV === 'preview';
+
 function checkStaticPage(file, label) {
   const html = readFileSync(file, 'utf8');
   check(`${label} has a page-specific title`, /<title>[^<]*LIN4CRE QUOTES<\/title>/.test(html));
   check(`${label} has a canonical URL`, html.includes('rel="canonical"'));
   check(`${label} has Open Graph metadata`, html.includes('property="og:title"'));
-  check(`${label} is indexable`, html.includes('content="index,follow'));
+  check(
+    `${label} is ${previewBuild ? 'noindex on the preview deployment' : 'indexable'}`,
+    html.includes(previewBuild ? 'content="noindex,nofollow' : 'content="index,follow'),
+  );
   check(
     `${label} has real static content`,
     html.includes('prerender-shell') && html.includes('<h1'),
