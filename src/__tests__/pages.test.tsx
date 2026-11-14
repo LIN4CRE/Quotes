@@ -9,6 +9,7 @@ import { STORAGE_KEYS } from '@/lib/storage';
 import Collections from '@/pages/Collections';
 import CollectionDetail from '@/pages/CollectionDetail';
 import Favourites from '@/pages/Favourites';
+import Reflections from '@/pages/Reflections';
 import SearchPage from '@/pages/SearchPage';
 import Settings from '@/pages/Settings';
 import { renderWithProviders } from '@/test/render';
@@ -85,6 +86,7 @@ describe('favourites page', () => {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           quoteIds: [first.id],
+          reflectionIds: [],
         },
       ],
     });
@@ -184,6 +186,7 @@ describe('collections', () => {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           quoteIds: [first.id, second.id],
+          reflectionIds: [],
         },
       ],
     });
@@ -249,7 +252,9 @@ describe('settings data management', () => {
     fireEvent.change(within(dialog).getByLabelText('Backup JSON'), {
       target: { value: exportLibraryAsJson(incoming) },
     });
-    await user.click(within(dialog).getByRole('button', { name: 'Import' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Review import' }));
+    expect(await within(dialog).findByText('Ready to merge')).toBeInTheDocument();
+    await user.click(within(dialog).getByRole('button', { name: 'Import 2 saved items' }));
 
     expect(await screen.findByText('Backup imported')).toBeInTheDocument();
     await waitFor(() => {
@@ -269,7 +274,7 @@ describe('settings data management', () => {
     fireEvent.change(within(dialog).getByLabelText('Backup JSON'), {
       target: { value: '{not json' },
     });
-    await user.click(within(dialog).getByRole('button', { name: 'Import' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Review import' }));
 
     expect(within(dialog).getByRole('alert')).toHaveTextContent('not valid JSON');
   });
@@ -307,5 +312,88 @@ describe('settings data management', () => {
 
     await user.click(screen.getByRole('switch', { name: /Reduce motion/i }));
     expect(document.documentElement.dataset.motion).toBe('reduced');
+  });
+});
+
+describe('reflections page', () => {
+  it('creates a private reflection and labels it as the reader’s own words', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<Reflections />);
+
+    expect(screen.getByRole('heading', { name: 'My quotes & reflections' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Write your first reflection' }));
+
+    await user.type(screen.getByLabelText(/^Title/), 'On beginning again');
+    await user.type(
+      screen.getByLabelText('Quote or reflection'),
+      'Attention is the beginning of devotion.',
+    );
+    await user.click(screen.getByRole('button', { name: 'Save reflection' }));
+
+    expect(await screen.findByText('Attention is the beginning of devotion.')).toBeInTheDocument();
+    expect(screen.getByText('Your words')).toBeInTheDocument();
+    expect(screen.getByText('On beginning again')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        (_content, element) =>
+          element?.tagName === 'P' &&
+          element.textContent?.includes('Not a historical quotation') === true,
+      ),
+    ).toBeInTheDocument();
+
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.library) ?? '{}');
+      expect(stored.reflections).toHaveLength(1);
+      expect(stored.version).toBe(3);
+    });
+  });
+
+  it('filters favourites and deletes a reflection only after confirmation', async () => {
+    const user = userEvent.setup();
+    seedLibrary({
+      reflections: [
+        {
+          id: 'reflection-1',
+          title: 'Kept',
+          text: 'A line worth keeping.',
+          favourite: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+        {
+          id: 'reflection-2',
+          text: 'A line still under review.',
+          favourite: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ],
+    });
+
+    renderWithProviders(<Reflections />);
+
+    await user.click(screen.getByRole('button', { name: /Favourites 1/ }));
+    expect(screen.getByText('A line worth keeping.')).toBeInTheDocument();
+    expect(screen.queryByText('A line still under review.')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'All 2' }));
+    const deleteButtons = screen.getAllByRole('button', { name: 'Delete reflection' });
+    await user.click(deleteButtons[0]!);
+
+    expect(screen.getByRole('dialog', { name: 'Delete this reflection?' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getAllByText('A line worth keeping.').length).toBeGreaterThan(0);
+
+    await user.click(screen.getAllByRole('button', { name: 'Delete reflection' })[0]!);
+    await user.click(
+      within(screen.getByRole('dialog', { name: 'Delete this reflection?' })).getByRole('button', {
+        name: 'Delete reflection',
+      }),
+    );
+
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEYS.library) ?? '{}');
+      expect(stored.reflections).toHaveLength(1);
+    });
   });
 });

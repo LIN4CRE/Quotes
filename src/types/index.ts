@@ -44,6 +44,8 @@ export interface Quote {
   categories: CategoryId[];
   attribution: AttributionStatus;
   source?: string;
+  /** Optional work-level link to a checked public-domain edition or archive. */
+  sourceUrl?: string;
   year?: number;
   attributionNote?: string;
 }
@@ -80,6 +82,23 @@ export interface Collection {
   createdAt: string;
   updatedAt: string;
   quoteIds: string[];
+  /** User-written reflections grouped in this collection. */
+  reflectionIds: string[];
+}
+
+/**
+ * A locally written quotation or personal reflection. It is deliberately a
+ * separate type from `Quote`: it has no historical attribution status and is
+ * never blended into the curated library, search results or author pages.
+ */
+export interface Reflection {
+  id: string;
+  title?: string;
+  text: string;
+  author?: string;
+  favourite: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface HistoryEntry {
@@ -95,11 +114,12 @@ export interface AdviceEntry {
 }
 
 export interface LibraryData {
-  version: 2;
+  version: 3;
   favourites: SavedQuote[];
   collections: Collection[];
   history: HistoryEntry[];
   advice: AdviceEntry[];
+  reflections: Reflection[];
 }
 
 export type ThemePreference = 'dark' | 'light' | 'system';

@@ -14,6 +14,8 @@ export function CollectionCard({ collection }: { collection: Collection }) {
     .slice(0, 2)
     .map((id) => getQuote(id))
     .filter((quote): quote is NonNullable<typeof quote> => Boolean(quote));
+  const reflectionCount = collection.reflectionIds.length;
+  const total = collection.quoteIds.length + reflectionCount;
 
   return (
     <Link
@@ -31,7 +33,8 @@ export function CollectionCard({ collection }: { collection: Collection }) {
       </div>
       <h3 className="mt-4 font-serif text-lg font-semibold text-ink">{collection.name}</h3>
       <p className="mt-1 line-clamp-2 min-h-[2.5rem] text-[12px] leading-relaxed text-muted">
-        {collection.description || `${collection.quoteIds.length} saved quotes in this collection.`}
+        {collection.description ||
+          `${total} saved ${total === 1 ? 'item' : 'items'} in this collection.`}
       </p>
 
       {previews.length > 0 ? (
@@ -47,12 +50,19 @@ export function CollectionCard({ collection }: { collection: Collection }) {
           ))}
         </ul>
       ) : (
-        <p className="mt-4 border-t border-line pt-3 text-[11px] text-subtle">No quotes yet.</p>
+        <p className="mt-4 border-t border-line pt-3 text-[11px] text-subtle">
+          {reflectionCount > 0
+            ? `${reflectionCount} personal reflection${reflectionCount === 1 ? '' : 's'} in this collection.`
+            : 'No quotes yet.'}
+        </p>
       )}
 
       <div className="mt-auto flex items-center justify-between pt-4 text-[10.5px] text-subtle">
         <span>
           {collection.quoteIds.length} quote{collection.quoteIds.length === 1 ? '' : 's'}
+          {reflectionCount > 0
+            ? ` · ${reflectionCount} reflection${reflectionCount === 1 ? '' : 's'}`
+            : ''}
         </span>
         <span>Updated {relativeTime(collection.updatedAt)}</span>
       </div>

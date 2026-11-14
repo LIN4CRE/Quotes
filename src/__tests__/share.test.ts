@@ -53,6 +53,14 @@ describe('sharing text', () => {
     );
   });
 
+  it('carries the checked source URL into copied text', () => {
+    const linked = { ...base, sourceUrl: 'https://www.gutenberg.org/ebooks/2680' };
+    const text = buildQuoteText(linked);
+    expect(text).toContain('— Socrates, Apology');
+    expect(text).toContain('\nhttps://www.gutenberg.org/ebooks/2680');
+    expect(buildQuoteText(linked, { includeSource: false })).not.toContain('gutenberg.org');
+  });
+
   it('reports clipboard success and failure honestly', async () => {
     const writeText = withClipboard();
     await expect(copyText('hello')).resolves.toBe(true);

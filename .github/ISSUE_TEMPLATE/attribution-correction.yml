@@ -1,0 +1,59 @@
+name: Attribution, wording or rights correction
+description: Report a quote whose author, source, wording or rights status is wrong or incomplete.
+title: '[Attribution] '
+labels:
+  - attribution
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping keep this library honest. Corrections are treated as editorial changes, not as votes: please include evidence where you can.
+  - type: input
+    id: quote
+    attributes:
+      label: Quote or page
+      description: The quote id if you have it, or the full URL from this site.
+      placeholder: https://lin4cre-quotes.vercel.app/quote/aurelius-be-one
+    validations:
+      required: true
+  - type: dropdown
+    id: concern
+    attributes:
+      label: What needs correcting?
+      options:
+        - Author attribution
+        - Wording or translation
+        - Source, date or edition
+        - Rights or permission concern
+        - Missing attribution note
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: What the site currently says
+      description: Paste the quote text, author and source exactly as displayed.
+    validations:
+      required: true
+  - type: textarea
+    id: correction
+    attributes:
+      label: What it should say, and why
+      description: Include page numbers, editions, archive links or other evidence. If you are unsure, say so — an uncertain report is still useful.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence or references
+      description: Links to a scan, publisher page, library catalogue or authoritative source. Do not upload files you do not have the right to share.
+  - type: checkboxes
+    id: confirmation
+    attributes:
+      label: Confirmation
+      options:
+        - label: I have read the attribution policy and have not included personal data about anyone else.
+          required: true
+        - label: I understand that a disputed or unverified quotation will be labelled honestly rather than removed only to avoid uncertainty.
+          required: true

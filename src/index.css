@@ -333,3 +333,282 @@ html[data-motion='reduced'] *::after {
   transition-duration: 0.001ms !important;
   scroll-behavior: auto !important;
 }
+
+/* ——— Build-time reading view ————————————————————————————————————————
+   Public pages are pre-rendered with this markup so crawlers and no-JS
+   readers get real content. React replaces it on boot. Keep these styles
+   simple and dependent only on the theme tokens. */
+.prerender-shell {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 4rem;
+  color: var(--c-ink);
+  font-family: var(--font-sans);
+}
+
+.prerender-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--c-line);
+}
+
+.prerender-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--c-ink);
+  text-decoration: none;
+}
+
+.prerender-mark {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(140deg, #f3c987, #d99a4e 55%, #8f5a1f);
+  color: #1a1206;
+  font-family: var(--font-serif);
+  font-size: 1.9rem;
+  line-height: 1;
+}
+
+.prerender-brand b {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.34em;
+}
+
+.prerender-brand small {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--c-muted);
+  font-family: var(--font-serif);
+  font-size: 0.65rem;
+  letter-spacing: 0.3em;
+}
+
+.prerender-header nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.78rem;
+}
+
+.prerender-header nav a,
+.prerender-footer a,
+.prerender-link {
+  color: var(--c-accent);
+  text-decoration: none;
+}
+
+.prerender-header nav a:hover,
+.prerender-footer a:hover,
+.prerender-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.prerender-main {
+  padding: 2.5rem 0;
+}
+
+.prerender-eyebrow {
+  margin: 0 0 0.8rem;
+  color: var(--c-accent);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.prerender-title {
+  margin: 0;
+  max-width: 18ch;
+  font-family: var(--font-serif);
+  font-size: clamp(2.1rem, 6vw, 4.1rem);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.prerender-title em {
+  color: var(--c-accent);
+  font-style: italic;
+}
+
+.prerender-lede {
+  max-width: 42rem;
+  margin: 1.2rem 0;
+  color: var(--c-muted);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.prerender-main h2 {
+  margin: 2.2rem 0 0.8rem;
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+}
+
+.prerender-cta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.6rem;
+  padding: 0 1.1rem;
+  border-radius: 999px;
+  background: var(--c-accent);
+  color: var(--c-accent-ink);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.prerender-link {
+  margin-left: 0.8rem;
+  font-size: 0.82rem;
+}
+
+.prerender-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.7rem;
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.prerender-grid a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--c-line);
+  border-radius: 1rem;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  text-decoration: none;
+}
+
+.prerender-grid a span {
+  color: var(--c-subtle);
+  font-size: 0.7rem;
+}
+
+.prerender-authors {
+  columns: 3 12rem;
+  margin: 1rem 0;
+  padding-left: 1.1rem;
+  color: var(--c-muted);
+  font-size: 0.82rem;
+  line-height: 1.9;
+}
+
+.prerender-authors a {
+  color: var(--c-ink);
+  text-decoration: none;
+}
+
+.prerender-quotes {
+  margin: 1.2rem 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--c-line);
+}
+
+.prerender-quotes li {
+  border-bottom: 1px solid var(--c-line);
+}
+
+.prerender-quotes a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1rem 0;
+  color: var(--c-ink);
+  text-decoration: none;
+}
+
+.prerender-quote-text {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  line-height: 1.5;
+}
+
+.prerender-quote-by {
+  color: var(--c-subtle);
+  font-size: 0.75rem;
+}
+
+.prerender-main blockquote {
+  margin: 2rem 0 1rem;
+  padding-left: 1.2rem;
+  border-left: 2px solid var(--c-accent);
+}
+
+.prerender-main blockquote p {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(1.8rem, 5vw, 3.2rem);
+  line-height: 1.18;
+}
+
+.prerender-note {
+  margin: 0.8rem 0;
+  color: var(--c-subtle);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.prerender-definitions {
+  max-width: 42rem;
+  margin: 1rem 0;
+}
+
+.prerender-definitions dt {
+  margin-top: 1rem;
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.prerender-definitions dd {
+  margin: 0.25rem 0 0;
+  color: var(--c-muted);
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.prerender-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--c-line);
+  color: var(--c-subtle);
+  font-size: 0.7rem;
+  line-height: 1.7;
+}
+
+.prerender-footer p {
+  margin: 0;
+}
+
+@media (max-width: 36rem) {
+  .prerender-shell {
+    padding: 1rem 1rem 3rem;
+  }
+
+  .prerender-header nav {
+    gap: 0.75rem;
+  }
+
+  .prerender-authors {
+    columns: 2 8rem;
+  }
+}

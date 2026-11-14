@@ -10,6 +10,8 @@ const appDescription =
   'Discover, collect and share carefully attributed quotes. Daily inspiration, categories, authors, favourites and custom collections — all stored on your device.';
 
 export default defineConfig({
+  server: { host: '0.0.0.0', allowedHosts: ['.e2b.app'] },
+  preview: { host: '0.0.0.0', allowedHosts: ['.e2b.app'] },
   plugins: [
     react(),
     tailwindcss(),

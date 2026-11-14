@@ -7,7 +7,9 @@
  */
 
 export const STORAGE_KEYS = {
-  library: 'lin4cre.quotes.library.v2',
+  library: 'lin4cre.quotes.library.v3',
+  /** Read-only fallback while upgrading a v2 library. Never written again. */
+  legacyLibraryV2: 'lin4cre.quotes.library.v2',
   settings: 'lin4cre.quotes.settings.v1',
   legacyAdvice: 'growing-page-entries-v1',
 } as const;

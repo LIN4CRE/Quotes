@@ -42,6 +42,35 @@ check('index.html declares the Open Graph card', indexHtml.includes('/og-image.p
 check('index.html declares an icon', /rel="icon"/.test(indexHtml));
 check('index.html declares a theme colour', /name="theme-color"/.test(indexHtml));
 
+const ogPath = join(dist, 'og-image.png');
+if (existsSync(ogPath)) {
+  const size = pngSize(ogPath);
+  check(
+    'Open Graph image is 1280x640',
+    size?.width === 1280 && size?.height === 640,
+    JSON.stringify(size),
+  );
+  check(
+    'Open Graph image is under 1 MB',
+    statSync(ogPath).size < 1_000_000,
+    String(statSync(ogPath).size),
+  );
+}
+const socialPreviewPath = join(root, 'docs', 'branding', 'social-preview.png');
+check('GitHub social preview exists', existsSync(socialPreviewPath));
+if (existsSync(socialPreviewPath)) {
+  const size = pngSize(socialPreviewPath);
+  check(
+    'GitHub social preview is 1280x640 and under 1 MB',
+    size?.width === 1280 && size?.height === 640 && statSync(socialPreviewPath).size < 1_000_000,
+    JSON.stringify({ ...size, bytes: statSync(socialPreviewPath).size }),
+  );
+}
+check(
+  'social preview has an editable generator',
+  existsSync(join(root, 'scripts', 'generate-social-preview.py')),
+);
+
 const manifestPath = join(dist, 'manifest.webmanifest');
 check('manifest.webmanifest exists', existsSync(manifestPath));
 
@@ -73,7 +102,7 @@ if (existsSync(manifestPath)) {
 const requiredImages = [
   ['favicon-32.png', 32, 32],
   ['apple-touch-icon.png', 180, 180],
-  ['og-image.png', 1200, 630],
+  ['og-image.png', 1280, 640],
   ['icons/icon-192.png', 192, 192],
   ['icons/icon-512.png', 512, 512],
   ['icons/icon-maskable-512.png', 512, 512],
@@ -149,6 +178,121 @@ if (existsSync(vercelPath)) {
     ),
   );
 }
+
+// ——— SEO and static-generation artefacts ————————————————————————————————
+const SITE_URL = 'https://lin4cre-quotes.vercel.app';
+const sitemapPath = join(dist, 'sitemap.xml');
+const robotsPath = join(dist, 'robots.txt');
+const aboutPath = join(dist, 'about.html');
+const quotePath = join(dist, 'quote', 'aurelius-be-one.html');
+
+check('sitemap.xml exists', existsSync(sitemapPath));
+check('robots.txt exists', existsSync(robotsPath));
+check('about.html is pre-rendered', existsSync(aboutPath));
+check('a quote page is pre-rendered', existsSync(quotePath));
+
+if (existsSync(sitemapPath)) {
+  const sitemap = readFileSync(sitemapPath, 'utf8');
+  const locations = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
+  check('sitemap is XML, not the SPA shell', sitemap.trimStart().startsWith('<?xml'));
+  check(
+    'sitemap declares the URL set namespace',
+    sitemap.includes('http://www.sitemaps.org/schemas/sitemap/0.9'),
+  );
+  check('sitemap is not HTML', !/<!doctype html>/i.test(sitemap));
+  check(
+    'sitemap contains at least 490 public URLs',
+    locations.length >= 490,
+    String(locations.length),
+  );
+  check(
+    'sitemap URLs all use the production origin',
+    locations.every((location) => location.startsWith(`${SITE_URL}/`)),
+  );
+  check(
+    'sitemap excludes private views',
+    !locations.some((location) =>
+      /\/(favourites|collections|history|reflections|settings|random|search)(\/|$)/.test(location),
+    ),
+  );
+  check(
+    'sitemap covers the home, about, explore, advice, theme, author and quote routes',
+    locations.includes(`${SITE_URL}/`) &&
+      locations.includes(`${SITE_URL}/about`) &&
+      locations.includes(`${SITE_URL}/explore`) &&
+      locations.includes(`${SITE_URL}/advice`) &&
+      locations.some((location) => location.includes('/category/')) &&
+      locations.some((location) => location.includes('/author/')) &&
+      locations.some((location) => location.includes('/quote/')),
+  );
+  check('sitemap has no duplicate URLs', new Set(locations).size === locations.length);
+}
+
+if (existsSync(robotsPath)) {
+  const robots = readFileSync(robotsPath, 'utf8');
+  check('robots.txt points at the sitemap', robots.includes(`Sitemap: ${SITE_URL}/sitemap.xml`));
+  check('robots.txt disallows private views', (robots.match(/^Disallow:/gm) ?? []).length >= 7);
+}
+
+const previewBuild = process.env.VERCEL_ENV === 'preview';
+
+function checkStaticPage(file, label) {
+  const html = readFileSync(file, 'utf8');
+  check(`${label} has a page-specific title`, /<title>[^<]*LIN4CRE QUOTES<\/title>/.test(html));
+  check(`${label} has a canonical URL`, html.includes('rel="canonical"'));
+  check(`${label} has Open Graph metadata`, html.includes('property="og:title"'));
+  check(
+    `${label} is ${previewBuild ? 'noindex on the preview deployment' : 'indexable'}`,
+    html.includes(previewBuild ? 'content="noindex,nofollow' : 'content="index,follow'),
+  );
+  check(
+    `${label} has real static content`,
+    html.includes('prerender-shell') && html.includes('<h1'),
+  );
+  check(`${label} contains no empty React root`, !/<div id="root"><\/div>/.test(html));
+}
+
+if (existsSync(aboutPath)) checkStaticPage(aboutPath, 'about.html');
+if (existsSync(indexPath)) {
+  const homeHtml = readFileSync(indexPath, 'utf8');
+  check(
+    'home page includes WebSite JSON-LD',
+    homeHtml.includes('application/ld+json') && homeHtml.includes('"@type":"WebSite"'),
+  );
+  check(
+    'home page has one JSON-LD block',
+    (homeHtml.match(/application\/ld\+json/g) ?? []).length === 1,
+  );
+}
+if (existsSync(quotePath)) {
+  checkStaticPage(quotePath, 'quote/aurelius-be-one.html');
+  const quoteHtml = readFileSync(quotePath, 'utf8');
+  check(
+    'quote page exposes Quotation structured data',
+    quoteHtml.includes('itemtype="https://schema.org/Quotation"'),
+  );
+  check('quote page includes the quotation text', quoteHtml.includes('<blockquote'));
+  check('quote page states its attribution status', quoteHtml.includes('Attribution status:'));
+  check(
+    'quote page links back to the interactive route',
+    quoteHtml.includes('href="/quote/aurelius-be-one"'),
+  );
+}
+
+const vercelConfig = JSON.parse(readFileSync(join(root, 'vercel.json'), 'utf8'));
+const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+check(
+  'Vercel build runs the full verification gate',
+  vercelConfig.buildCommand === 'npm run verify:production',
+  vercelConfig.buildCommand,
+);
+check('verify:production script exists', Boolean(packageJson.scripts?.['verify:production']));
+check('Vercel enables clean URLs', vercelConfig.cleanUrls === true);
+check(
+  'SPA rewrite excludes static resource paths',
+  vercelConfig.rewrites?.[0]?.source === '/((?!assets/|icons/|.*\\.[a-zA-Z0-9]+$).*)',
+  vercelConfig.rewrites?.[0]?.source,
+);
 
 const builtBytes = statSync(swPath).size;
 console.log(`Checked ${checks.length} production-artefact conditions.`);

@@ -12,29 +12,63 @@ import { validateCollectionName } from '@/lib/library';
 interface CollectionPickerProps {
   open: boolean;
   onClose: () => void;
-  quoteId: string;
+  quoteId?: string;
+  reflectionId?: string;
 }
 
-export function CollectionPicker({ open, onClose, quoteId }: CollectionPickerProps) {
-  const { library, createCollection, addToCollection, removeFromCollection } = useLibrary();
+export function CollectionPicker({ open, onClose, quoteId, reflectionId }: CollectionPickerProps) {
+  const {
+    library,
+    createCollection,
+    addToCollection,
+    removeFromCollection,
+    addReflectionToCollection,
+    removeReflectionFromCollection,
+  } = useLibrary();
   const { addToast } = useToast();
   const [newName, setNewName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
-  const quote = getQuote(quoteId);
+  const quote = quoteId ? getQuote(quoteId) : undefined;
+  const reflection = reflectionId
+    ? library.reflections.find((item) => item.id === reflectionId)
+    : undefined;
+  const preview = quote?.text ?? reflection?.text;
+
+  const isInCollection = (collection: (typeof library.collections)[number]) =>
+    quoteId
+      ? collection.quoteIds.includes(quoteId)
+      : collection.reflectionIds.includes(reflectionId ?? '');
 
   const handleToggle = (collectionId: string, checked: boolean) => {
+    if (quoteId) {
+      if (checked) {
+        const result = addToCollection(collectionId, quoteId);
+        if (result === 'duplicate') {
+          addToast({ title: 'Already in that collection', variant: 'info' });
+        } else if (result === 'added') {
+          addToast({ title: 'Added to collection', variant: 'success' });
+        }
+      } else {
+        removeFromCollection(collectionId, quoteId);
+        addToast({ title: 'Removed from collection', variant: 'info' });
+      }
+      return;
+    }
+
+    if (!reflectionId) return;
+
     if (checked) {
-      const result = addToCollection(collectionId, quoteId);
+      const result = addReflectionToCollection(collectionId, reflectionId);
       if (result === 'duplicate') {
         addToast({ title: 'Already in that collection', variant: 'info' });
       } else if (result === 'added') {
-        addToast({ title: 'Added to collection', variant: 'success' });
+        addToast({ title: 'Reflection added to collection', variant: 'success' });
       }
     } else {
-      removeFromCollection(collectionId, quoteId);
-      addToast({ title: 'Removed from collection', variant: 'info' });
+      removeReflectionFromCollection(collectionId, reflectionId);
+      addToast({ title: 'Reflection removed from collection', variant: 'info' });
     }
   };
 
@@ -45,7 +79,12 @@ export function CollectionPicker({ open, onClose, quoteId }: CollectionPickerPro
       return;
     }
 
-    const collection = createCollection(newName, '', [quoteId]);
+    const collection = createCollection(
+      newName,
+      '',
+      quoteId ? [quoteId] : [],
+      reflectionId ? [reflectionId] : [],
+    );
     if (!collection) {
       setError('That collection could not be created.');
       return;
@@ -53,7 +92,7 @@ export function CollectionPicker({ open, onClose, quoteId }: CollectionPickerPro
 
     addToast({
       title: `Created “${collection.name}”`,
-      description: 'Quote added to it.',
+      description: quoteId ? 'Quote added to it.' : 'Reflection added to it.',
       variant: 'success',
     });
     setNewName('');
@@ -74,9 +113,11 @@ export function CollectionPicker({ open, onClose, quoteId }: CollectionPickerPro
       }
     >
       <div className="space-y-4">
-        {quote ? (
+        {preview ? (
           <p className="rounded-xl border border-line bg-surface-2 px-4 py-3 font-serif text-sm leading-relaxed text-muted">
-            “{quote.text.length > 120 ? `${quote.text.slice(0, 120).trim()}…` : quote.text}”
+            {quote ? '“' : ''}
+            {preview.length > 120 ? `${preview.slice(0, 120).trim()}…` : preview}
+            {quote ? '”' : ''}
           </p>
         ) : null}
 
@@ -89,7 +130,7 @@ export function CollectionPicker({ open, onClose, quoteId }: CollectionPickerPro
 
         <ul className="space-y-2">
           {library.collections.map((collection) => {
-            const checked = collection.quoteIds.includes(quoteId);
+            const checked = isInCollection(collection);
             return (
               <li key={collection.id}>
                 <label
@@ -124,6 +165,11 @@ export function CollectionPicker({ open, onClose, quoteId }: CollectionPickerPro
                     <span className="block text-[11px] text-subtle">
                       {collection.quoteIds.length} quote
                       {collection.quoteIds.length === 1 ? '' : 's'}
+                      {collection.reflectionIds.length > 0
+                        ? ` · ${collection.reflectionIds.length} reflection${
+                            collection.reflectionIds.length === 1 ? '' : 's'
+                          }`
+                        : ''}
                     </span>
                   </span>
                 </label>

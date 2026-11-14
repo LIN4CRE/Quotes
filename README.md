@@ -1,13 +1,16 @@
 # LIN4CRE QUOTES
 
-**A quote library with its sources attached.** Discover a daily quote, browse fifteen themes and 167 authors, save favourites, write private notes, build collections, and make branded share images — all without an account, a backend or a tracking pixel.
+**A quote library with its sources attached.** Discover a daily quote, browse fifteen themes and 167 authors, follow checked source links, save favourites, write private reflections, build collections, and make branded share images — all without an account, a backend or a tracking pixel.
 
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev)
 [![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-231f20.svg)](#licence)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-PayPal-e7b66b?logo=paypal&logoColor=1a1206)](https://paypal.me/dlinacre16)
 
-**Live:** [lin4cre-quotes.vercel.app](https://lin4cre-quotes.vercel.app) — `main` deploys to production on Vercel; every pull request gets a preview deployment.
+**Live:** [lin4cre-quotes.vercel.app](https://lin4cre-quotes.vercel.app) · **Version 1.1.0** — `main` deploys to production on Vercel through a full verification gate; every pull request gets a preview deployment.
+
+If the library is useful to you, you can [buy me a coffee through PayPal](https://paypal.me/dlinacre16). It is a plain link — no payment code runs in the app, and nothing is tracked.
 
 ---
 
@@ -23,13 +26,17 @@
 | ------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | ![Discover in light theme](docs/screenshots/desktop-home-light.png) | ![Personal and curated collections](docs/screenshots/desktop-collections.png) |
 
+| My quotes & reflections                                                             | About, attribution and support                                                        |
+| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| ![Private reflections kept on the device](docs/screenshots/desktop-reflections.png) | ![About page with attribution policy and support](docs/screenshots/desktop-about.png) |
+
 <p align="center">
   <img src="docs/screenshots/mobile-home.png" alt="Mobile home screen" width="270" />
   &nbsp;&nbsp;
   <img src="docs/screenshots/mobile-more-menu.png" alt="Mobile navigation sheet" width="270" />
 </p>
 
-All screenshots are of the real application, captured in Chromium at 1440×1000 and 390×844.
+All screenshots are of the real application, captured in headless Chromium against the production build at 1440×1000 and 390×844 (2× on mobile). No mock-ups.
 
 ---
 
@@ -44,6 +51,7 @@ All screenshots are of the real application, captured in Chromium at 1440×1000 
 - **Featured collections** — six editor-curated sets that can be opened and copied into a personal library.
 - **Recently viewed** history (100 entries, deduplicated, grouped by day).
 - **Full search** across quote text, author names, themes and sources, with highlighted matches and attribution filters.
+- **Checked source links** on quote detail where a public-domain edition or archive exists, plus a one-click attribution-correction form everywhere a claim is made.
 
 ### Personal library
 
@@ -51,8 +59,10 @@ All screenshots are of the real application, captured in Chromium at 1440×1000 
 - **Custom collections** with names, descriptions, inline creation, rename, delete, and add/remove quotes from any card.
 - **Reading history** that you can clear without touching saved quotes.
 - **Local persistence** in `localStorage`, versioned and validated on load.
-- **JSON export/import** and **Markdown export** of favourites.
-- **Migration** of entries saved by the original `g.html` page (`growing-page-entries-v1`).
+- **My quotes & reflections** — a private notebook for your own words, with optional title/personal attribution, favourites, search, edit/delete and collection membership. Always labelled “Your words” and “Not a historical quotation”; never mixed into the curated library.
+- **Review-then-merge JSON import** with a summary of favourites, notes, collections, reflections, history and advice before anything changes; malformed files are rejected safely.
+- **Versioned migrations** from the v2 library schema and from the original `g.html` advice entries (`growing-page-entries-v1`).
+- **Markdown export** of favourites and JSON export of everything, including reflections.
 - Clear, honest **empty, error and loading states** throughout.
 
 ### Sharing
@@ -70,6 +80,12 @@ All screenshots are of the real application, captured in Chromium at 1440×1000 
 - **Keyboard shortcuts**: `⌘/Ctrl K` command palette, `/` search, `?` shortcut guide, `r` random quote, `t` cycle theme.
 - **Accessibility**: semantic landmarks, skip link, focus-trapped dialogs, labelled controls, visible focus, AA contrast in both themes and reduced-motion support.
 - **Security headers** and a strict Content-Security-Policy configured in `vercel.json`; no secrets, no API keys and no environment variables.
+- **SEO that survives a static host**: 494 pre-rendered public pages, a real XML sitemap, canonical/OG/Twitter metadata and `noindex` on private local views.
+
+### Support
+
+- A plainly labelled **Buy Me a Coffee** link to `https://paypal.me/dlinacre16` in the footer, About page and mobile More sheet.
+- It opens PayPal in a new tab with `rel="noopener noreferrer"`; the app contains no payment SDK, key, popup or pressure messaging.
 
 ---
 
@@ -103,17 +119,19 @@ npm run dev        # http://localhost:5173
 
 ### Scripts
 
-| Command                           | What it does                                                                         |
-| --------------------------------- | ------------------------------------------------------------------------------------ |
-| `npm run dev`                     | Vite development server with HMR                                                     |
-| `npm run build`                   | Type-check with `tsc -b`, then build to `dist/` with the service worker              |
-| `npm run preview`                 | Serve the production build locally                                                   |
-| `npm run typecheck`               | Strict TypeScript project build                                                      |
-| `npm run lint`                    | ESLint (flat config, React Hooks rules)                                              |
-| `npm test`                        | Vitest run (64 tests)                                                                |
-| `npm run check:build`             | Verifies manifest, icons, service worker, SPA metadata and Vercel headers in `dist/` |
-| `npm run format` / `format:check` | Prettier                                                                             |
-| `npm run icons`                   | Regenerates PNG icons and the Open Graph card (requires Python 3 + Pillow)           |
+| Command                                      | What it does                                                                      |
+| -------------------------------------------- | --------------------------------------------------------------------------------- |
+| `npm run dev`                                | Vite development server with HMR                                                  |
+| `npm run build`                              | Type-check, build with Vite/Workbox, then pre-render public pages and the sitemap |
+| `npm run preview`                            | Serve the production build locally                                                |
+| `npm run typecheck`                          | Strict TypeScript project build                                                   |
+| `npm run lint`                               | ESLint (flat config, React Hooks rules)                                           |
+| `npm test`                                   | Vitest run (79 tests)                                                             |
+| `npm run check:build`                        | Verifies artefacts, SEO output, sitemap, headers and static pages (87 conditions) |
+| `npm run verify:production`                  | The full Vercel gate: lint → typecheck → tests → build → check:build              |
+| `npm run format` / `format:check`            | Prettier                                                                          |
+| `npm run icons`                              | Regenerates PNG icons and the Open Graph card (requires Python 3 + Pillow)        |
+| `python3 scripts/generate-social-preview.py` | Regenerates the 1280×640 social preview and OG card                               |
 
 ### Rebuilding artwork
 
@@ -124,30 +142,38 @@ python3 -m pip install --user Pillow
 npm run icons
 ```
 
-`public/favicon.svg` and `public/icons/icon-maskable.svg` are the editable vector sources.
+`public/favicon.svg` and `public/icons/icon-maskable.svg` are the editable vector sources. The social preview and its upload instructions live in [`docs/branding/`](docs/branding/README.md).
 
 ---
 
 ## Project structure
 
 ```
-├── public/                 # favicon, PWA icons, OG card, robots.txt
-├── docs/screenshots/       # real application screenshots used above
+├── .github/ISSUE_TEMPLATE/ # attribution, bug and correction issue forms
+├── public/                 # favicon, PWA icons, 1280×640 OG card, robots.txt
+├── docs/
+│   ├── ARCHITECTURE.md     # data model, rendering, SEO and security decisions
+│   ├── branding/           # social preview + upload instructions
+│   └── screenshots/        # real application screenshots used above
 ├── scripts/
-│   ├── check-build.mjs     # post-build artefact checks (runs in CI)
-│   └── generate-icons.py   # Pillow artwork generator
+│   ├── check-build.mjs     # post-build artefact and SEO checks
+│   ├── generate-static.mjs # pre-renders public routes, sitemap.xml and robots.txt
+│   ├── generate-icons.py   # Pillow artwork generator
+│   └── generate-social-preview.py # editable 1280×640 social preview source
 ├── src/
 │   ├── components/
+│   │   ├── Seo.tsx         # route-aware document metadata
 │   │   ├── discover/       # theme cards
 │   │   ├── layout/         # shell, sidebar, mobile nav, banners, shortcuts
 │   │   ├── library/        # collection cards/dialog, picker, note editor
-│   │   ├── quotes/         # quote card, list, actions, avatar
+│   │   ├── quotes/         # quote card, list, actions, source/correction links
+│   │   ├── reflections/    # private reflection editor and card
 │   │   ├── search/         # command palette
 │   │   ├── share/          # canvas image dialog
 │   │   └── ui/             # buttons, modal, badges, fields, skeletons, logo
 │   ├── data/               # quotes, authors, categories, curated collections
 │   ├── hooks/              # online status, media query, install prompt, title
-│   ├── lib/                # search, storage, library model, dates, sharing, image
+│   ├── lib/                # search, storage, library model, SEO content, dates, sharing, image
 │   ├── pages/              # one module per route (lazy-loaded)
 │   ├── providers/          # settings, library, toasts
 │   ├── services/           # Advice Slip client with validation
@@ -156,7 +182,7 @@ npm run icons
 │   ├── App.tsx             # route table
 │   ├── index.css           # theme tokens, primitives, animations
 │   └── main.tsx            # entry point and provider composition
-├── vercel.json             # build/output, SPA rewrite, headers, caching
+├── vercel.json             # verify gate, clean URLs, negative SPA rewrite, headers
 └── vite.config.ts          # Tailwind, PWA manifest/workbox, Vitest config
 ```
 
@@ -173,7 +199,17 @@ The quote library is **curated offline content** shipped with the app, not fetch
 | **Disputed attribution** | Contested or known misattribution                           | Kept and labelled; an explanation is shown                  |
 | **Proverb**              | Traditional saying with no identifiable author              | Attributed to “Proverb”, never to a named person            |
 
-The status is not decorative: it changes the wording of copied quotes and the label drawn onto exported images. Quotes are **never invented**, and no uncertain line is silently presented as verified. Corrections are welcome via issues or pull requests.
+The status is not decorative: it changes the wording of copied quotes and the label drawn onto exported images. Quotes are **never invented**, and no uncertain line is silently presented as verified.
+
+### Source links and corrections
+
+- Where a quotation belongs to a public-domain work, the app links to a checked edition or archive — Project Gutenberg, the Folger Shakespeare Library, MIT Classics or Wikisource. Links are work-level, not invented page anchors, and only added after the destination has been verified.
+- Where no reliable link exists — including in-copyright works and translations without a traceable source — the interface says so and leaves the source unlinked. There is no placeholder button.
+- Source URLs are appended to copied text and share text alongside the attribution status.
+- Every quote page offers a pre-filled **attribution correction** issue form. Reports can cover author, wording, source/date, rights concerns or a missing note. Corrections are reviewed as editorial evidence, not as votes.
+- The MIT licence covers the application code only. Quotation texts remain the property of their authors and rights holders; their inclusion here is not a claim of permission or public-domain status.
+
+The full editorial rules are in [CONTRIBUTING.md](CONTRIBUTING.md#content-rules). Security reports should go through [SECURITY.md](SECURITY.md), not a public issue.
 
 ### Live advice (the `g.html` integration)
 
@@ -194,17 +230,34 @@ The quote library never depends on this API.
 
 ## Persistence, export and sync
 
-| Key                          | Contents                                                    |
-| ---------------------------- | ----------------------------------------------------------- |
-| `lin4cre.quotes.library.v2`  | favourites, notes, collections, history, saved advice       |
-| `lin4cre.quotes.settings.v1` | theme, text size, motion and disputed-quote preferences     |
-| `growing-page-entries-v1`    | legacy advice entries read once and removed after migration |
+| Key                          | Contents                                                        |
+| ---------------------------- | --------------------------------------------------------------- |
+| `lin4cre.quotes.library.v3`  | favourites, notes, collections, history, advice and reflections |
+| `lin4cre.quotes.library.v2`  | read once during upgrade, then removed; never written again     |
+| `lin4cre.quotes.settings.v1` | theme, text size, motion and disputed-quote preferences         |
+| `growing-page-entries-v1`    | legacy advice entries read once and removed after migration     |
 
-Data is read defensively: malformed records are skipped, unknown quote ids are discarded, collections are capped at 100 and names at 80 characters. If `localStorage` is unavailable or full, a visible banner warns that changes will not survive a refresh.
+Data is read defensively: malformed records are skipped, unknown quote ids are discarded, collections are capped at 100, reflections at 500, names at 80 characters and reflection text at 5,000. A v2 library is migrated once to v3, with collections gaining `reflectionIds`. If `localStorage` is unavailable or full, a visible banner warns that changes will not survive a refresh.
 
-Exports are pretty-printed JSON with an `app` signature, schema version, timestamp and optional settings. Imports merge rather than overwrite: local notes win, matching collection names are combined, and history/advice are deduplicated.
+Exports are pretty-printed JSON with an `app` signature, schema version, timestamp, the full library and optional settings. Imports are parsed, validated and **previewed before merging** — favourites, notes, collections, reflections, history, advice and any warnings. Merging never overwrites blindly: local notes win, matching collection names and ids are combined, duplicate reflections are kept once, and history/advice are deduplicated. Malformed or empty files produce a clear error instead of partial silent changes.
 
 **There is no cross-device sync, and the app never pretends there is.** Use export/import to move a library between browsers.
+
+---
+
+## SEO and static output
+
+The app remains a client-side React application, but public content is not trapped behind JavaScript:
+
+- **494 public pages are pre-rendered at build time**: home, about, explore, advice, six featured collections, fifteen themes, 167 authors and all 302 quote pages.
+- Each page has a unique `<title>`, meta description, canonical URL, Open Graph and Twitter metadata, and indexable robots directive. Quote and author pages also contain schema.org microdata and route-specific JSON-LD (`Quotation`, `Person`, `CollectionPage`, `WebSite`).
+- The pre-rendered HTML contains the quotation, author, source and attribution status in a readable editorial layout. React replaces it on boot.
+- `/sitemap.xml` is a real XML document listing only public pages. Private, browser-local views (`/favourites`, `/collections`, `/history`, `/reflections`, `/settings`, `/random`, `/search`) are excluded and marked `noindex`.
+- `/robots.txt` contains the correct absolute `Sitemap:` line.
+- `vercel.json` enables clean URLs and a **negative** SPA rewrite: paths with a file extension or under `/assets/`/`/icons/` are never rewritten to `index.html`, so a missing resource returns 404 rather than an HTML 200.
+- `scripts/check-build.mjs` verifies all of the above on every build, including the sitemap count, absence of private URLs, canonical/OG tags and the pre-rendered quote content.
+
+There is no SEO server or runtime process: the output is static files produced by `npm run build`.
 
 ---
 
@@ -239,16 +292,17 @@ Exports are pretty-printed JSON with an `app` signature, schema version, timesta
 
 All of the following were run on the implementation in this repository.
 
-| Check                              | Command                                                 | Result                                                                                                       |
-| ---------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Strict type-check                  | `npm run typecheck`                                     | Passed                                                                                                       |
-| Lint                               | `npm run lint`                                          | Passed                                                                                                       |
-| Unit/component tests               | `npm test`                                              | **64 passed / 64** across 9 files                                                                            |
-| Production build                   | `npm run build`                                         | Passed (86 precache entries)                                                                                 |
-| Artefact verification              | `npm run check:build`                                   | **46/46 conditions passed**                                                                                  |
-| Browser flows (Chromium)           | ad hoc script against the dev server                    | **13/13 passed** — routing, search, notes, copy, share image, collections, theme, mobile nav, reduced motion |
-| PWA/offline (Chromium)             | ad hoc script against `vite preview`                    | **6/6 passed** — SW control, manifest, precache, offline reload, offline navigation, deep link               |
-| Accessibility (axe-core, Chromium) | 40 scans across 10 routes × desktop/mobile × dark/light | **0 violations** (WCAG 2.0/2.1 A and AA)                                                                     |
+| Check                              | Command                                                 | Result                                                                                                                        |
+| ---------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Strict type-check                  | `npm run typecheck`                                     | Passed                                                                                                                        |
+| Lint                               | `npm run lint`                                          | Passed                                                                                                                        |
+| Unit/component tests               | `npm test`                                              | **79 passed / 79** across 10 files                                                                                            |
+| Production build                   | `npm run build`                                         | Passed (87 precache entries, 494 pre-rendered pages, sitemap)                                                                 |
+| Artefact verification              | `npm run check:build`                                   | **87/87 conditions passed**                                                                                                   |
+| Full verification gate             | `npm run verify:production`                             | Passed — lint, typecheck, tests, build, artefact checks                                                                       |
+| Browser flows (Chromium)           | script against `vite preview` of the production build   | **28/28 passed** — reflections, import preview, source/correction links, support, mobile More, static HTML, sitemap, metadata |
+| Accessibility (axe-core, Chromium) | 48 scans across 12 routes × desktop/mobile × dark/light | **0 violations** (WCAG 2.0/2.1 A and AA)                                                                                      |
+| PWA/offline (Chromium, v1.0 base)  | script against `vite preview`                           | **6/6 passed** — SW control, manifest, precache, offline reload, offline navigation, deep link                                |
 
 Test coverage includes:
 
@@ -260,9 +314,12 @@ Test coverage includes:
 - quote detail: rendering, history recording, save/note, copy, share, disputed notes, 404, collection creation, back navigation;
 - search/favourites/collections/settings pages, import/export, invalid JSON, destructive-action confirmation, theme/font/motion settings;
 - application startup, routing, 404, keyboard shortcuts and axe checks in jsdom;
-- offline hook, offline advice state and the shell offline banner.
+- offline hook, offline advice state and the shell offline banner;
+- reflection creation, validation, favourites, editing, collection membership and deletion;
+- v2→v3 migration, import previews, malformed/untrusted files, newer-schema warnings and merge deduplication;
+- static page content, sitemap completeness and the absence of private routes.
 
-Browser-only checks above were executed in this build environment with headless Chromium and are not part of the committed CI suite (CI runs lint, type-check, Vitest, build and artefact checks). No test result is claimed unless it was actually run.
+Browser-only checks above were executed in this build environment with headless Chromium against the production build and are not part of the committed CI suite (CI runs lint, type-check, Vitest, build and artefact checks). No test result is claimed unless it was actually run.
 
 ---
 
@@ -270,15 +327,18 @@ Browser-only checks above were executed in this build environment with headless 
 
 `vercel.json` is the complete deployment configuration:
 
-- Framework `vite`, build `npm run build`, output `dist`, install `npm ci`.
-- SPA rewrite to `/index.html` for client-side routes.
+- Framework `vite`, install `npm ci`, output `dist`.
+- Build command `npm run verify:production`: Vercel cannot deploy a build that fails lint, type-checking, tests, the production build or artefact checks.
+- `cleanUrls` so pre-rendered pages are served at `/about`, `/quote/:id` and so on.
+- Negative SPA rewrite to `/index.html` only for genuine application routes; static resources are excluded so missing files return 404.
+- Explicit XML content type and caching for `/sitemap.xml`, plus caching for `/robots.txt`.
 - CSP allowing only self-hosted assets plus `https://api.adviceslip.com`; `img-src` includes `blob:` for generated images.
 - `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`.
 - Immutable one-year caching for hashed assets; no-cache for `sw.js` and the manifest; `Service-Worker-Allowed: /`.
 
 The Vercel project is connected to **`LIN4CRE/Quotes`**, with `main` as the production branch and automatic preview deployments for pull requests. No environment variables are required.
 
-To deploy elsewhere: `npm ci && npm run build`, serve `dist/` as static files with an SPA fallback to `index.html`, and keep the headers above if your host supports them.
+To deploy elsewhere: `npm ci && npm run build`, serve `dist/` as static files with clean URLs and an SPA fallback to `index.html` for extensionless routes only, and keep the headers above if your host supports them. Do not fall back for `/sitemap.xml`, `/robots.txt`, assets or missing images.
 
 ---
 
@@ -289,11 +349,25 @@ To deploy elsewhere: `npm ci && npm run build`, serve `dist/` as static files wi
 - Some quotations are common English translations rather than the original wording.
 - Advice Slip is an external free service; it can be slow, rate-limited or unavailable.
 - Native sharing, clipboard and install prompts depend on browser support.
-- Local data is per browser and per device; clearing site data removes the library unless you exported a backup.
+- Local data is per browser and per device; clearing site data removes the library unless you exported a backup. Reflections have the same limitation and are never uploaded.
+- Pre-rendered metadata is generated from the same data modules as the app. A new public route must be registered in both places, and the build fails its checks if the sitemap or a static page is missing.
+- Source links are work-level and intentionally limited to verified archives. Many in-copyright quotations have no link, and the interface says so.
 - Generated images use locally available fonts. The app loads Fraunces and Inter, but a browser that blocks font loading will fall back to serif/sans-serif metrics.
 
 ---
 
+## Project documentation
+
+- [Architecture](docs/ARCHITECTURE.md) — data model, migrations, rendering, SEO, security and trade-offs.
+- [Contributing](CONTRIBUTING.md) — setup, content rules, tests and pull-request expectations.
+- [Security policy](SECURITY.md) — private reporting and the security model.
+- [Changelog](CHANGELOG.md) — what changed in 1.1.0.
+- [Branding](docs/branding/README.md) — social preview, palette and upload instructions.
+
+## Support the project
+
+LIN4CRE QUOTES is free, has no ads and no tracking. If it is useful to you, you can [buy me a coffee through PayPal](https://paypal.me/dlinacre16). The link opens in a new tab; PayPal handles the payment, and this app never sees your details. No account, subscription or feature is unlocked by supporting.
+
 ## Licence
 
-Application code: [MIT](LICENSE). Quotations remain the property of their authors and rights holders and are included for reference and inspiration; translations may carry separate rights. Fonts are licensed under the SIL Open Font License via Fontsource. Icons are from [Lucide](https://lucide.dev) (ISC). Advice content is provided by [Advice Slip](https://api.adviceslip.com/).
+Application code: [MIT](LICENSE). **The MIT licence does not cover quotation texts.** Quotations remain the property of their authors and rights holders and are included for reference and inspiration; translations may carry separate rights. Their inclusion is not a claim of permission, public-domain status or endorsement. Fonts are licensed under the SIL Open Font License via Fontsource. Icons are from [Lucide](https://lucide.dev) (ISC). Advice content is provided by [Advice Slip](https://api.adviceslip.com/).

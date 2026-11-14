@@ -3,6 +3,7 @@ import {
   Heart,
   History,
   Library,
+  PenLine,
   Radio,
   Search,
   Settings,
@@ -34,6 +35,12 @@ export const primaryNav: NavItem[] = [
     label: 'Collections',
     icon: Library,
     description: 'Your own grouped lists',
+  },
+  {
+    to: '/reflections',
+    label: 'My reflections',
+    icon: PenLine,
+    description: 'Your own words, kept privately on this device',
   },
   { to: '/history', label: 'History', icon: History, description: 'Recently viewed quotes' },
   {

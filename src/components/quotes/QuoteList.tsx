@@ -57,7 +57,6 @@ export function QuoteList({
             onClick={() =>
               setPagination((current) => ({ ...current, visible: current.visible + pageSize }))
             }
-            aria-label={`Show more quotes, ${remaining} remaining`}
           >
             Show more quotes
             <span className="text-[11px] text-subtle tabular-nums">{remaining} left</span>

@@ -19,6 +19,7 @@ export function buildQuoteText(quote: Quote, options: QuoteTextOptions = {}): st
 
   if (includeSource && quote.source) {
     attribution += `, ${quote.source}`;
+    if (quote.sourceUrl) attribution += `\n${quote.sourceUrl}`;
   }
 
   if (quote.attribution === 'disputed') {

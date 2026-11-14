@@ -1,8 +1,9 @@
-import { Compass, Heart, MoreHorizontal, Search, Sparkles } from 'lucide-react';
+import { Compass, Heart, MoreHorizontal, Search, Settings, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 
 import { Modal } from '@/components/ui/Modal';
+import { SupportButton } from '@/components/ui/SupportButton';
 import { primaryNav } from '@/components/layout/navItems';
 import { useLibrary } from '@/providers/LibraryProvider';
 import { cn } from '@/lib/cn';
@@ -95,6 +96,7 @@ export function MobileBottomNav() {
               onClick={() => setMoreOpen(false)}
               className="flex items-center gap-3 rounded-xl px-3 py-3 transition hover:bg-surface-2"
             >
+              <Settings className="size-[18px] text-accent" aria-hidden />
               <span className="min-w-0">
                 <span className="block text-sm font-medium text-ink">Settings</span>
                 <span className="block text-[11px] text-subtle">
@@ -102,6 +104,9 @@ export function MobileBottomNav() {
                 </span>
               </span>
             </NavLink>
+          </li>
+          <li className="border-t border-line pt-2">
+            <SupportButton variant="compact" className="mt-1 w-full justify-center" />
           </li>
         </ul>
       </Modal>

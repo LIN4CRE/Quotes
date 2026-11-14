@@ -16,6 +16,8 @@ import { Link, useParams } from 'react-router-dom';
 import { CollectionPicker } from '@/components/library/CollectionPicker';
 import { QuoteNote } from '@/components/library/NoteEditor';
 import { AuthorAvatar } from '@/components/quotes/AuthorAvatar';
+import { CorrectionLink } from '@/components/quotes/CorrectionLink';
+import { SourceLink } from '@/components/quotes/SourceLink';
 import { QuoteCard } from '@/components/quotes/QuoteCard';
 import { QuoteImageDialog } from '@/components/share/QuoteImageDialog';
 import { AttributionBadge } from '@/components/ui/Badge';
@@ -148,7 +150,11 @@ export default function QuoteDetail() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_21rem]">
-        <article className="relative isolate overflow-hidden rounded-[30px] border border-line bg-surface p-6 shadow-2xl shadow-black/20 sm:p-9">
+        <article
+          itemScope
+          itemType="https://schema.org/Quotation"
+          className="relative isolate overflow-hidden rounded-[30px] border border-line bg-surface p-6 shadow-2xl shadow-black/20 sm:p-9"
+        >
           <span
             className="pointer-events-none absolute -right-6 -bottom-16 -z-10 font-serif text-[16rem] leading-none text-ink/[0.03] select-none"
             aria-hidden
@@ -174,14 +180,23 @@ export default function QuoteDetail() {
           </div>
 
           <blockquote className="mt-6">
-            <p className="quote-body text-[1.7rem] text-ink sm:text-[2.15rem]">“{quote.text}”</p>
+            <p itemProp="text" className="quote-body text-[1.7rem] text-ink sm:text-[2.15rem]">
+              “{quote.text}”
+            </p>
           </blockquote>
 
           <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line pt-4">
             <Link to={`/author/${quote.authorId}`} className="flex items-center gap-3">
               <AuthorAvatar name={quote.author} size="md" />
               <span>
-                <span className="block text-sm font-medium text-ink">{quote.author}</span>
+                <span
+                  itemProp="author"
+                  itemScope
+                  itemType="https://schema.org/Person"
+                  className="block text-sm font-medium text-ink"
+                >
+                  <span itemProp="name">{quote.author}</span>
+                </span>
                 <span className="block text-[11px] text-subtle">
                   {author?.lifespan ?? 'Author'}
                   {author?.nationality ? ` · ${author.nationality}` : ''}
@@ -189,10 +204,13 @@ export default function QuoteDetail() {
               </span>
             </Link>
             {quote.source ? (
-              <p className="text-[11.5px] text-subtle">
-                <span className="text-muted">Source:</span> {quote.source}
-                {quote.year ? ` · ${quote.year}` : ''}
-              </p>
+              <div className="text-[11.5px] text-subtle">
+                <p>
+                  <span className="text-muted">Source:</span> {quote.source}
+                  {quote.year ? ` · ${quote.year}` : ''}
+                </p>
+                <SourceLink quote={quote} compact className="mt-1" />
+              </div>
             ) : (
               <p className="text-[11.5px] text-subtle">No primary source listed</p>
             )}
@@ -279,13 +297,17 @@ export default function QuoteDetail() {
                 ? `Source: ${quote.source}${quote.year ? `, ${quote.year}` : ''}`
                 : 'No primary source has been confirmed for this wording.'}
             </p>
-            <Link
-              to="/about"
-              className="mt-2 inline-flex items-center gap-1 text-[11.5px] text-accent transition hover:underline"
-            >
-              How attribution is graded
-              <ArrowRight className="size-3" aria-hidden />
-            </Link>
+            <SourceLink quote={quote} className="mt-1" />
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+              <Link
+                to="/about"
+                className="inline-flex items-center gap-1 text-[11.5px] text-accent transition hover:underline"
+              >
+                How attribution is graded
+                <ArrowRight className="size-3" aria-hidden />
+              </Link>
+              <CorrectionLink quote={quote} label="Report a correction" />
+            </div>
           </section>
 
           {author ? (

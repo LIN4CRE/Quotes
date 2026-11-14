@@ -1,5 +1,14 @@
 User-agent: *
 Allow: /
 
-# The application is a static single-page app. There are no private routes to
-# hide from crawlers; personal libraries live only in each visitor's browser.
+# Private, browser-local views. The public quote, author, theme and about
+# pages are pre-rendered and listed in the sitemap.
+Disallow: /favourites
+Disallow: /collections
+Disallow: /history
+Disallow: /reflections
+Disallow: /settings
+Disallow: /random
+Disallow: /search
+
+Sitemap: https://lin4cre-quotes.vercel.app/sitemap.xml
