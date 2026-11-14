@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 
+import { Seo } from '@/components/Seo';
 import { CommandPalette } from '@/components/search/CommandPalette';
 import { MobileBottomNav } from '@/components/layout/MobileBottomNav';
 import { MobileTopBar } from '@/components/layout/MobileTopBar';
@@ -9,6 +10,7 @@ import { ShortcutsDialog } from '@/components/layout/ShortcutsDialog';
 import { ScrollToTop } from '@/components/layout/ScrollToTop';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { GitHubIcon } from '@/components/ui/GitHubIcon';
+import { SupportButton } from '@/components/ui/SupportButton';
 import { quotes } from '@/data/quotes';
 import { pickRandom } from '@/lib/random';
 import { useSettings } from '@/providers/SettingsProvider';
@@ -99,6 +101,7 @@ export function AppShell() {
           className="mx-auto w-full max-w-6xl px-4 pt-6 pb-28 outline-none sm:px-6 sm:pt-8 md:pb-16 lg:px-10"
         >
           <Outlet />
+          <Seo />
 
           <footer className="mt-16 border-t border-line pt-6 pb-2 text-[11px] text-subtle">
             <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
@@ -114,6 +117,7 @@ export function AppShell() {
                 <Link to="/settings" className="transition hover:text-ink">
                   Settings
                 </Link>
+                <SupportButton variant="compact" className="min-h-8 px-2.5 text-[10.5px]" />
                 <a
                   href="https://github.com/LIN4CRE/Quotes"
                   target="_blank"
