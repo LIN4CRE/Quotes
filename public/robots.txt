@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# The application is a static single-page app. There are no private routes to
+# hide from crawlers; personal libraries live only in each visitor's browser.

@@ -1,0 +1,335 @@
+@import 'tailwindcss';
+
+/* ——— Theme tokens ————————————————————————————————————————————————
+   Dark is the default experience. Both themes are exposed as semantic CSS
+   variables so components never hard-code colours. */
+
+:root {
+  --c-canvas: #08090b;
+  --c-surface: #101114;
+  --c-surface-2: #16181d;
+  --c-surface-3: #1d2026;
+  --c-line: #262932;
+  --c-line-strong: #3a3e4a;
+  --c-ink: #f4f1ea;
+  --c-muted: #a6a7b0;
+  --c-subtle: #8a8e9a;
+  --c-accent: #e7b66b;
+  --c-accent-strong: #f3c987;
+  --c-accent-soft: rgba(231, 182, 107, 0.12);
+  --c-accent-ink: #1a1206;
+  --c-success: #6ee7b7;
+  --c-danger: #fda4af;
+  --c-warning: #fcd34d;
+  --c-shadow: rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --c-canvas: #faf7f1;
+  --c-surface: #ffffff;
+  --c-surface-2: #f4efe6;
+  --c-surface-3: #ebe4d7;
+  --c-line: #e4dbcb;
+  --c-line-strong: #cdbfa9;
+  --c-ink: #1a1614;
+  --c-muted: #5f574c;
+  --c-subtle: #6f6455;
+  --c-accent: #8f5a10;
+  --c-accent-strong: #79490b;
+  --c-accent-soft: rgba(143, 90, 16, 0.1);
+  --c-accent-ink: #fffaf0;
+  --c-success: #036b4e;
+  --c-danger: #b3123a;
+  --c-warning: #7a5208;
+  --c-shadow: rgba(52, 39, 22, 0.16);
+  color-scheme: light;
+}
+
+/* Pre-hydration fallback: follow the OS until the stored preference is applied. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --c-canvas: #faf7f1;
+    --c-surface: #ffffff;
+    --c-surface-2: #f4efe6;
+    --c-surface-3: #ebe4d7;
+    --c-line: #e4dbcb;
+    --c-line-strong: #cdbfa9;
+    --c-ink: #1a1614;
+    --c-muted: #5f574c;
+    --c-subtle: #6f6455;
+    --c-accent: #a96a16;
+    --c-accent-strong: #8d5410;
+    --c-accent-soft: rgba(169, 106, 22, 0.1);
+    --c-accent-ink: #fffaf0;
+    --c-success: #047857;
+    --c-danger: #be123c;
+    --c-warning: #92610a;
+    --c-shadow: rgba(52, 39, 22, 0.16);
+    color-scheme: light;
+  }
+}
+
+@theme inline {
+  --font-sans:
+    'Inter Variable', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: 'Fraunces Variable', ui-serif, Georgia, 'Times New Roman', serif;
+
+  --color-canvas: var(--c-canvas);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface-2);
+  --color-surface-3: var(--c-surface-3);
+  --color-line: var(--c-line);
+  --color-line-strong: var(--c-line-strong);
+  --color-ink: var(--c-ink);
+  --color-muted: var(--c-muted);
+  --color-subtle: var(--c-subtle);
+  --color-accent: var(--c-accent);
+  --color-accent-strong: var(--c-accent-strong);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-accent-ink: var(--c-accent-ink);
+  --color-success: var(--c-success);
+  --color-danger: var(--c-danger);
+  --color-warning: var(--c-warning);
+
+  --animate-rise: rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-in: fade-in 220ms ease-out both;
+  --animate-scale-in: scale-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-toast-in: toast-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-shimmer: shimmer 1.8s infinite;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+    scroll-behavior: smooth;
+  }
+
+  html[data-font='sm'] {
+    font-size: 15px;
+  }
+
+  html[data-font='lg'] {
+    font-size: 17.5px;
+  }
+
+  /* Arbitrary pixel sizes are used for typographic precision, so the text-size
+     preference scales the whole interface rather than only rem-based text. */
+  html[data-font='sm'] body {
+    zoom: 0.94;
+  }
+
+  html[data-font='lg'] body {
+    zoom: 1.08;
+  }
+
+  body {
+    @apply bg-canvas text-ink antialiased;
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+    background-image:
+      radial-gradient(
+        55rem 38rem at 8% -12%,
+        color-mix(in oklab, var(--c-accent) 8%, transparent),
+        transparent 65%
+      ),
+      radial-gradient(45rem 35rem at 100% 0%, rgba(120, 100, 200, 0.045), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  ::selection {
+    background: var(--c-accent);
+    color: var(--c-accent-ink);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--c-line-strong);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--c-subtle);
+    background-clip: content-box;
+    border: 3px solid transparent;
+  }
+
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .surface-card {
+    @apply rounded-2xl border border-line bg-surface;
+  }
+
+  .field {
+    @apply w-full rounded-xl border border-line bg-surface-2 px-4 py-2.5 text-sm text-ink placeholder:text-subtle transition focus:border-line-strong focus:bg-surface-3 focus:outline-none;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-2.5 py-1 text-[11px] font-medium text-muted;
+  }
+
+  .link-quiet {
+    @apply text-muted underline decoration-line-strong underline-offset-4 transition hover:text-ink hover:decoration-accent;
+  }
+
+  .quote-body {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-optical-sizing: auto;
+    letter-spacing: -0.02em;
+    line-height: 1.22;
+    text-wrap: pretty;
+  }
+
+  .display-title {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1.06;
+    text-wrap: balance;
+  }
+
+  .label-caps {
+    @apply text-[10px] font-semibold tracking-[0.22em] uppercase text-subtle;
+  }
+
+  .hide-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .grain {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.35;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+    background-size: 4px 4px;
+    mask-image: radial-gradient(ellipse at center, black, transparent 75%);
+    pointer-events: none;
+  }
+}
+
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .text-shadow-soft {
+    text-shadow: 0 1px 30px var(--c-shadow);
+  }
+}
+
+/* Respect the OS setting, and the in-app override. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+html[data-motion='reduced'] *,
+html[data-motion='reduced'] *::before,
+html[data-motion='reduced'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
